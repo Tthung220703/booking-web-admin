@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { collection, query, onSnapshot, updateDoc, doc, getDoc, where } from 'firebase/firestore';
 import { db, auth } from './firebaseConfig';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faPrint } from '@fortawesome/free-solid-svg-icons';
+
 
 const BookingManagement = () => {
     const [orders, setOrders] = useState([]);
@@ -48,7 +51,71 @@ const BookingManagement = () => {
 
         return () => unsubscribeOrders();
     }, [isLoggedIn]);
+    // Xuất hóa đơn
+    const exportInvoice = (order) => {
+        // Tạo nội dung hóa đơn
+    const invoiceContent = `
+        <html>
+            <head>
+                <title>Hóa Đơn Đặt Phòng</title>
+                <style>
+                    body {
+                        font-family: Arial, sans-serif;
+                        line-height: 1.6;
+                        padding: 20px;
+                    }
+                    h1 {
+                        text-align: center;
+                        color: #333;
+                    }
+                    .invoice {
+                        max-width: 600px;
+                        margin: 0 auto;
+                        border: 1px solid #ddd;
+                        border-radius: 10px;
+                        padding: 20px;
+                        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                    }
+                    .invoice-header {
+                        text-align: center;
+                        margin-bottom: 20px;
+                    }
+                    .invoice-details {
+                        margin-bottom: 20px;
+                    }
+                    .invoice-details p {
+                        margin: 5px 0;
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="invoice">
+                    <div class="invoice-header">
+                        <h1>Hóa Đơn Đặt Phòng</h1>
+                    </div>
+                    <div class="invoice-details">
+                        <p><strong>Khách sạn:</strong> ${hotelNames[order.hotelId] || 'Đang tải...'}</p>
+                        <p><strong>Người đặt:</strong> ${order.userName}</p>
+                        <p><strong>Số điện thoại:</strong> ${order.phoneNumber}</p>
+                        <p><strong>Loại phòng:</strong> ${order.roomType}</p>
+                        <p><strong>Số lượng phòng:</strong> ${order.roomCount}</p>
+                        <p><strong>Ngày Check-In:</strong> ${new Date(order.checkInDate).toLocaleDateString('vi-VN')}</p>
+                        <p><strong>Ngày Check-Out:</strong> ${new Date(order.checkOutDate).toLocaleDateString('vi-VN')}</p>
+                        <p><strong>Tổng giá tiền:</strong> ${order.totalPrice.toLocaleString('vi-VN')} VND</p>
+                        <p><strong>Trạng thái:</strong> ${order.status}</p>
+                    </div>
+                </div>
+            </body>
+        </html>
+    `;
 
+    // Mở cửa sổ mới và in
+    const printWindow = window.open('', '_blank');
+    printWindow.document.open();
+    printWindow.document.write(invoiceContent);
+    printWindow.document.close();
+    printWindow.print();
+    };
     // Cập nhật trạng thái đơn đặt phòng
     const updateOrderStatus = async (orderId, status) => {
         try {
@@ -148,73 +215,167 @@ const BookingManagement = () => {
         }
     };
 
-    const styles = {
+    // const styles = {
+    //     container: {
+    //         padding: '20px',
+    //         fontFamily: 'Arial, sans-serif',
+    //         backgroundColor: '#f5f5f5',
+    //         minHeight: '100vh',
+    //     },
+    //     title: {
+    //         textAlign: 'center',
+    //         fontSize: '24px',
+    //         fontWeight: 'bold',
+    //         marginBottom: '20px',
+    //         color: '#333',
+    //     },
+    //     table: {
+    //         width: '100%',
+    //         borderCollapse: 'collapse',
+    //         marginBottom: '20px',
+    //         backgroundColor: '#fff',
+    //         borderRadius: '8px',
+    //         overflow: 'hidden',
+    //         boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+    //     },
+    //     tableHead: {
+    //         backgroundColor: '#007BFF',
+    //         color: '#fff',
+    //     },
+    //     tableCell: {
+    //         padding: '10px',
+    //         border: '1px solid #ddd',
+    //         textAlign: 'center',
+    //     },
+    //     buttonContainer: {
+    //         display: 'flex',
+    //         justifyContent: 'center',
+    //         gap: '10px',
+    //     },
+    //     button: {
+    //         padding: '8px 12px',
+    //         borderRadius: '5px',
+    //         border: 'none',
+    //         cursor: 'pointer',
+    //         fontSize: '14px',
+    //         fontWeight: 'bold',
+    //     },
+    //     confirmButton: {
+    //         backgroundColor: '#28a745',
+    //         color: '#fff',
+    //     },
+    //     cancelButton: {
+    //         backgroundColor: '#dc3545',
+    //         color: '#fff',
+    //     },
+    //     checkOutButton: {
+    //         backgroundColor: '#007BFF',
+    //         color: '#fff',
+    //     },
+    //     warning: {
+    //         textAlign: 'center',
+    //         color: '#e74c3c',
+    //         fontSize: '18px',
+    //     },
+    //     link: {
+    //         color: '#3498db',
+    //         textDecoration: 'underline',
+    //     },
+    // };
+const styles = {
+    container: {
+        padding: '20px',
+        fontFamily: 'Arial, sans-serif',
+        backgroundColor: '#f5f5f5',
+        minHeight: '100vh',
+    },
+    title: {
+        textAlign: 'center',
+        fontSize: '24px',
+        fontWeight: 'bold',
+        marginBottom: '20px',
+        color: '#333',
+    },
+    table: {
+        width: '100%',
+        borderCollapse: 'collapse',
+        marginBottom: '20px',
+        backgroundColor: '#fff',
+        borderRadius: '8px',
+        overflow: 'hidden',
+        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+    },
+    tableHead: {
+        backgroundColor: '#007BFF',
+        color: '#fff',
+    },
+    tableCell: {
+        padding: '10px',
+        border: '1px solid #ddd',
+        textAlign: 'center',
+        fontSize: '14px',
+    },
+    buttonContainer: {
+        display: 'flex',
+        justifyContent: 'center',
+        gap: '10px',
+        flexWrap: 'wrap', // Đảm bảo các nút xuống dòng trên màn hình nhỏ
+    },
+    button: {
+        padding: '8px 12px',
+        borderRadius: '5px',
+        border: 'none',
+        cursor: 'pointer',
+        fontSize: '14px',
+        fontWeight: 'bold',
+    },
+    confirmButton: {
+        backgroundColor: '#28a745',
+        color: '#fff',
+    },
+    cancelButton: {
+        backgroundColor: '#dc3545',
+        color: '#fff',
+    },
+    checkOutButton: {
+        backgroundColor: '#007BFF',
+        color: '#fff',
+    },
+    warning: {
+        textAlign: 'center',
+        color: '#e74c3c',
+        fontSize: '18px',
+    },
+    link: {
+        color: '#3498db',
+        textDecoration: 'underline',
+    },
+    // Media query cho màn hình nhỏ hơn
+    '@media (max-width: 768px)': {
         container: {
-            padding: '20px',
-            fontFamily: 'Arial, sans-serif',
-            backgroundColor: '#f5f5f5',
-            minHeight: '100vh',
+            padding: '10px',
         },
         title: {
-            textAlign: 'center',
-            fontSize: '24px',
-            fontWeight: 'bold',
-            marginBottom: '20px',
-            color: '#333',
+            fontSize: '20px', // Giảm kích thước chữ tiêu đề
         },
         table: {
-            width: '100%',
-            borderCollapse: 'collapse',
-            marginBottom: '20px',
-            backgroundColor: '#fff',
-            borderRadius: '8px',
-            overflow: 'hidden',
-            boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-        },
-        tableHead: {
-            backgroundColor: '#007BFF',
-            color: '#fff',
+            display: 'block', // Chuyển bảng thành dạng cuộn ngang
+            overflowX: 'auto',
         },
         tableCell: {
-            padding: '10px',
-            border: '1px solid #ddd',
-            textAlign: 'center',
+            fontSize: '12px', // Giảm kích thước chữ trong bảng
+            padding: '8px',
         },
         buttonContainer: {
-            display: 'flex',
-            justifyContent: 'center',
-            gap: '10px',
+            flexDirection: 'column', // Chuyển các nút thành dạng cột
+            gap: '5px',
         },
         button: {
-            padding: '8px 12px',
-            borderRadius: '5px',
-            border: 'none',
-            cursor: 'pointer',
-            fontSize: '14px',
-            fontWeight: 'bold',
+            fontSize: '12px', // Giảm kích thước chữ của nút
+            padding: '6px 10px',
         },
-        confirmButton: {
-            backgroundColor: '#28a745',
-            color: '#fff',
-        },
-        cancelButton: {
-            backgroundColor: '#dc3545',
-            color: '#fff',
-        },
-        checkOutButton: {
-            backgroundColor: '#007BFF',
-            color: '#fff',
-        },
-        warning: {
-            textAlign: 'center',
-            color: '#e74c3c',
-            fontSize: '18px',
-        },
-        link: {
-            color: '#3498db',
-            textDecoration: 'underline',
-        },
-    };
+    },
+};
 
     if (!isLoggedIn) {
         return (
@@ -227,6 +388,100 @@ const BookingManagement = () => {
         );
     }
 
+    // return (
+    //     <div style={styles.container}>
+    //         <h1 style={styles.title}>Quản lý Đơn Đặt Phòng</h1>
+    //         <table style={styles.table}>
+    //             <thead style={styles.tableHead}>
+    //                 <tr>
+    //                     <th style={styles.tableCell}>Khách sạn</th>
+    //                     <th style={styles.tableCell}>Người đặt</th>
+    //                     <th style={styles.tableCell}>Số điện thoại</th>
+    //                     <th style={styles.tableCell}>Loại phòng</th>
+    //                     <th style={styles.tableCell}>Số lượng</th>
+    //                     <th style={styles.tableCell}>Ngày Check-In</th>
+    //                     <th style={styles.tableCell}>Ngày Check-Out</th>
+    //                     <th style={styles.tableCell}>Tổng Giá Tiền</th>
+    //                     <th style={styles.tableCell}>Trạng thái</th>
+    //                     <th style={styles.tableCell}>Hành động</th>
+    //                 </tr>
+    //             </thead>
+    //             <tbody>
+    //                 {orders.map((order) => (
+    //                     <tr key={order.id}>
+    //                         <td style={styles.tableCell}>
+    //                             {hotelNames[order.hotelId] || 'Đang tải...'}
+    //                         </td>
+    //                         <td style={styles.tableCell}>{order.userName}</td>
+    //                         <td style={styles.tableCell}>{order.phoneNumber}</td>
+    //                         <td style={styles.tableCell}>{order.roomType}</td>
+    //                         <td style={styles.tableCell}>{order.roomCount}</td>
+    //                         <td style={styles.tableCell}>
+    //                             {new Date(order.checkInDate).toLocaleDateString('vi-VN')}
+    //                         </td>
+    //                         <td style={styles.tableCell}>
+    //                             {new Date(order.checkOutDate).toLocaleDateString('vi-VN')}
+    //                         </td>
+    //                         <td style={styles.tableCell}>
+    //                             {order.totalPrice.toLocaleString('vi-VN')} VND
+    //                         </td>
+    //                         <td style={styles.tableCell}>{order.status}</td>
+    //                         <td style={styles.tableCell}>
+    //                             <div style={styles.buttonContainer}>
+    //                                 {order.status === 'Đang chờ duyệt' && (
+    //                                     <>
+    //                                         <button
+    //                                             style={{ ...styles.button, ...styles.confirmButton }}
+    //                                             onClick={() => updateOrderStatus(order.id, 'Đã xác nhận')}
+    //                                         >
+    //                                             Xác nhận
+    //                                         </button>
+    //                                         <button
+    //                                             style={{ ...styles.button, ...styles.cancelButton }}
+    //                                             onClick={() => updateOrderStatus(order.id, 'Đã hủy')}
+    //                                         >
+    //                                             Hủy
+    //                                         </button>
+    //                                     </>
+    //                                 )}
+    //                                 {order.status === 'Đã xác nhận' && (
+    //                                     <>
+    //                                         <button
+    //                                             style={{ ...styles.button, ...styles.confirmButton }}
+    //                                             onClick={() => updateOrderStatus(order.id, 'Đã thanh toán')}
+    //                                         >
+    //                                             Đã thanh toán
+    //                                         </button>
+    //                                         <button
+    //                                             style={{ ...styles.button, ...styles.cancelButton }}
+    //                                             onClick={() => updateOrderStatus(order.id, 'Người dùng không đến')}
+    //                                         >
+    //                                             Người dùng không đến
+    //                                         </button>
+    //                                     </>
+    //                                 )}
+    //                                 {order.status === 'Đã thanh toán' && (
+    //                                     <button
+    //                                         style={{ ...styles.button, ...styles.checkOutButton }}
+    //                                         onClick={() => handleCheckOut(order.id)}
+    //                                     >
+    //                                         Đã trả phòng
+    //                                     </button>
+    //                                 )}
+    //                                 {order.status === 'Đã trả phòng' && (
+    //                                     <span>Đã trả phòng</span>
+    //                                 )}
+    //                                 {order.status === 'Đã hủy' && (
+    //                                     <span>Đã hủy</span>
+    //                                 )}
+    //                             </div>
+    //                         </td>
+    //                     </tr>
+    //                 ))}
+    //             </tbody>
+    //         </table>
+    //     </div>
+    // );
     return (
         <div style={styles.container}>
             <h1 style={styles.title}>Quản lý Đơn Đặt Phòng</h1>
@@ -313,6 +568,13 @@ const BookingManagement = () => {
                                     {order.status === 'Đã hủy' && (
                                         <span>Đã hủy</span>
                                     )}
+                                    {/* Nút xuất hóa đơn */}
+                                    <button
+                                        style={{ ...styles.button, ...styles.printButton }}
+                                        onClick={() => exportInvoice(order)}
+                                    >
+                                        <FontAwesomeIcon icon={faPrint} style={styles.icon} />
+                                    </button>
                                 </div>
                             </td>
                         </tr>

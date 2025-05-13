@@ -268,6 +268,196 @@ function HotelList() {
   );
 }
 
+// const styles = {
+//   container: {
+//     maxWidth: '1200px',
+//     margin: '0 auto',
+//     padding: '20px',
+//     fontFamily: 'Arial, sans-serif',
+//     backgroundColor: '#f9f9f9',
+//     borderRadius: '10px',
+//     boxShadow: '0 4px 10px rgba(0, 0, 0, 0.1)',
+//   },
+//   heading: {
+//     fontSize: '32px',
+//     textAlign: 'center',
+//     color: '#333',
+//     marginBottom: '30px',
+//     fontWeight: 'bold',
+//   },
+//   hotelList: {
+//     display: 'grid',
+//     gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))',
+//     gap: '20px',
+//   },
+//   hotelItem: {
+//     backgroundColor: '#fff',
+//     borderRadius: '10px',
+//     boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+//     overflow: 'hidden',
+//     display: 'flex',
+//     flexDirection: 'column',
+//   },
+//   hotelImage: {
+//     width: '100%',
+//     height: '200px',
+//     objectFit: 'cover',
+//   },
+//   hotelInfo: {
+//     padding: '20px',
+//     display: 'flex',
+//     flexDirection: 'column',
+//     gap: '10px',
+//   },
+//   hotelName: {
+//     fontSize: '22px',
+//     fontWeight: 'bold',
+//     color: '#222',
+//     marginBottom: '5px',
+//   },
+//   hotelType: {
+//     fontSize: '14px',
+//     color: '#666',
+//     marginBottom: '10px',
+//     fontStyle: 'italic',
+//   },
+//   hotelDescription: {
+//     fontSize: '14px',
+//     color: '#555',
+//     lineHeight: '1.5',
+//     marginBottom: '15px',
+//   },
+//   buttonContainer: {
+//     display: 'flex',
+//     justifyContent: 'space-between',
+//     padding: '20px',
+//     borderTop: '1px solid #eee',
+//     backgroundColor: '#f9f9f9',
+//   },
+//   button: {
+//     padding: '10px 15px',
+//     fontSize: '14px',
+//     fontWeight: 'bold',
+//     color: '#fff',
+//     backgroundColor: '#4CAF50',
+//     border: 'none',
+//     borderRadius: '5px',
+//     cursor: 'pointer',
+//     transition: 'background-color 0.3s ease',
+//   },
+//   deleteButton: {
+//     padding: '10px 15px',
+//     fontSize: '14px',
+//     fontWeight: 'bold',
+//     color: '#fff',
+//     backgroundColor: '#e74c3c',
+//     border: 'none',
+//     borderRadius: '5px',
+//     cursor: 'pointer',
+//     transition: 'background-color 0.3s ease',
+//   },
+//   editForm: {
+//     backgroundColor: '#fff',
+//     borderRadius: '10px',
+//     padding: '20px',
+//     boxShadow: '0 4px 10px rgba(0, 0, 0, 0.1)',
+//     marginBottom: '30px',
+//   },
+//   subheading: {
+//     fontSize: '24px',
+//     marginBottom: '20px',
+//     color: '#333',
+//   },
+//   formRow: {
+//     marginBottom: '20px',
+//   },
+//   label: {
+//     display: 'block',
+//     marginBottom: '8px',
+//     fontSize: '16px',
+//     color: '#555',
+//   },
+//   input: {
+//     width: '100%',
+//     padding: '12px',
+//     fontSize: '16px',
+//     borderRadius: '8px',
+//     border: '1px solid #ddd',
+//     outline: 'none',
+//     transition: 'border-color 0.3s',
+//   },
+//   textarea: {
+//     width: '100%',
+//     padding: '12px',
+//     fontSize: '16px',
+//     borderRadius: '8px',
+//     border: '1px solid #ddd',
+//     outline: 'none',
+//     minHeight: '100px',
+//     transition: 'border-color 0.3s',
+//   },
+//   addButton: {
+//     padding: '10px',
+//     fontSize: '14px',
+//     backgroundColor: '#3498db',
+//     color: '#fff',
+//     border: 'none',
+//     borderRadius: '8px',
+//     cursor: 'pointer',
+//     marginTop: '10px',
+//     transition: 'background-color 0.3s',
+//   },
+//   deleteButtonHover: {
+//     backgroundColor: '#c0392b',
+//   },
+//   roomRow: {
+//     display: 'flex',
+//     flexDirection: 'row',
+//     gap: '10px',
+//     marginBottom: '15px',
+//   },
+//   roomInput: {
+//     flex: '1',
+//     padding: '10px',
+//     borderRadius: '5px',
+//     border: '1px solid #ddd',
+//   },
+//   imageRow: {
+//     display: 'flex',
+//     alignItems: 'center',
+//     gap: '10px',
+//     marginBottom: '10px',
+//   },
+//   loading: {
+//     fontSize: '18px',
+//     color: '#666',
+//     textAlign: 'center',
+//     marginTop: '50px',
+//   },
+//   error: {
+//     fontSize: '16px',
+//     color: '#e74c3c',
+//     textAlign: 'center',
+//     marginTop: '50px',
+//   },
+//   noHotels: {
+//     fontSize: '16px',
+//     color: '#555',
+//     textAlign: 'center',
+//     marginTop: '20px',
+//   },
+//   submitButton: {
+//     padding: '12px',
+//     fontSize: '16px',
+//     fontWeight: 'bold',
+//     backgroundColor: '#4CAF50',
+//     color: '#fff',
+//     border: 'none',
+//     borderRadius: '8px',
+//     cursor: 'pointer',
+//     transition: 'background-color 0.3s',
+//   },
+// };
 const styles = {
   container: {
     maxWidth: '1200px',
@@ -407,20 +597,11 @@ const styles = {
     marginTop: '10px',
     transition: 'background-color 0.3s',
   },
-  deleteButtonHover: {
-    backgroundColor: '#c0392b',
-  },
   roomRow: {
     display: 'flex',
     flexDirection: 'row',
     gap: '10px',
     marginBottom: '15px',
-  },
-  roomInput: {
-    flex: '1',
-    padding: '10px',
-    borderRadius: '5px',
-    border: '1px solid #ddd',
   },
   imageRow: {
     display: 'flex',
@@ -457,8 +638,31 @@ const styles = {
     cursor: 'pointer',
     transition: 'background-color 0.3s',
   },
+  // Media query cho màn hình nhỏ hơn
+  '@media (max-width: 768px)': {
+    container: {
+      padding: '10px',
+    },
+    heading: {
+      fontSize: '24px',
+    },
+    hotelList: {
+      gridTemplateColumns: '1fr', // Chuyển danh sách khách sạn thành 1 cột
+    },
+    buttonContainer: {
+      flexDirection: 'column', // Chuyển các nút thành dạng cột
+      gap: '10px',
+    },
+    button: {
+      fontSize: '12px',
+      padding: '8px 10px',
+    },
+    deleteButton: {
+      fontSize: '12px',
+      padding: '8px 10px',
+    },
+  },
 };
-
 
 
 export default HotelList;

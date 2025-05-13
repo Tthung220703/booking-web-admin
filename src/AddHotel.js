@@ -257,6 +257,80 @@ function AddHotel() {
   );
 }
 
+// const styles = {
+//   container: {
+//     maxWidth: '600px',
+//     margin: '0 auto',
+//     padding: '20px',
+//     fontFamily: 'Arial, sans-serif',
+//   },
+//   heading: {
+//     textAlign: 'center',
+//     marginBottom: '20px',
+//   },
+//   warning: {
+//     textAlign: 'center',
+//     color: '#e74c3c',
+//     fontSize: '18px',
+//   },
+//   link: {
+//     color: '#3498db',
+//     textDecoration: 'underline',
+//   },
+//   form: {
+//     display: 'flex',
+//     flexDirection: 'column',
+//     gap: '15px',
+//   },
+//   label: {
+//     fontWeight: 'bold',
+//   },
+//   input: {
+//     padding: '10px',
+//     borderRadius: '5px',
+//     border: '1px solid #ddd',
+//   },
+//   textarea: {
+//     padding: '10px',
+//     borderRadius: '5px',
+//     border: '1px solid #ddd',
+//     minHeight: '80px',
+//   },
+//   imageRow: {
+//     display: 'flex',
+//     alignItems: 'center',
+//     gap: '10px',
+//   },
+//   roomRow: {
+//     display: 'flex',
+//     alignItems: 'center',
+//     gap: '10px',
+//   },
+//   deleteButton: {
+//     backgroundColor: '#e74c3c',
+//     color: '#fff',
+//     border: 'none',
+//     padding: '5px 10px',
+//     cursor: 'pointer',
+//     borderRadius: '5px',
+//   },
+//   addButton: {
+//     backgroundColor: '#3498db',
+//     color: '#fff',
+//     border: 'none',
+//     padding: '10px',
+//     cursor: 'pointer',
+//     borderRadius: '5px',
+//   },
+//   submitButton: {
+//     backgroundColor: '#2ecc71',
+//     color: '#fff',
+//     border: 'none',
+//     padding: '15px',
+//     cursor: 'pointer',
+//     borderRadius: '5px',
+//   },
+// };
 const styles = {
   container: {
     maxWidth: '600px',
@@ -267,11 +341,12 @@ const styles = {
   heading: {
     textAlign: 'center',
     marginBottom: '20px',
+    fontSize: '1.8rem', // Kích thước chữ lớn hơn
   },
   warning: {
     textAlign: 'center',
     color: '#e74c3c',
-    fontSize: '18px',
+    fontSize: '1rem',
   },
   link: {
     color: '#3498db',
@@ -284,26 +359,29 @@ const styles = {
   },
   label: {
     fontWeight: 'bold',
+    fontSize: '1rem',
   },
   input: {
     padding: '10px',
     borderRadius: '5px',
     border: '1px solid #ddd',
+    fontSize: '1rem',
   },
   textarea: {
     padding: '10px',
     borderRadius: '5px',
     border: '1px solid #ddd',
     minHeight: '80px',
+    fontSize: '1rem',
   },
   imageRow: {
     display: 'flex',
-    alignItems: 'center',
+    flexDirection: 'column', // Chuyển thành cột trên màn hình nhỏ
     gap: '10px',
   },
   roomRow: {
     display: 'flex',
-    alignItems: 'center',
+    flexDirection: 'column', // Chuyển thành cột trên màn hình nhỏ
     gap: '10px',
   },
   deleteButton: {
@@ -313,6 +391,7 @@ const styles = {
     padding: '5px 10px',
     cursor: 'pointer',
     borderRadius: '5px',
+    fontSize: '0.9rem',
   },
   addButton: {
     backgroundColor: '#3498db',
@@ -321,6 +400,7 @@ const styles = {
     padding: '10px',
     cursor: 'pointer',
     borderRadius: '5px',
+    fontSize: '1rem',
   },
   submitButton: {
     backgroundColor: '#2ecc71',
@@ -329,6 +409,38 @@ const styles = {
     padding: '15px',
     cursor: 'pointer',
     borderRadius: '5px',
+    fontSize: '1rem',
+  },
+  // Media query cho màn hình nhỏ hơn
+  '@media (max-width: 768px)': {
+    container: {
+      maxWidth: '90%', // Giảm kích thước tối đa
+      padding: '10px',
+    },
+    heading: {
+      fontSize: '1.5rem', // Giảm kích thước chữ
+    },
+    input: {
+      fontSize: '0.9rem',
+    },
+    textarea: {
+      fontSize: '0.9rem',
+    },
+    deleteButton: {
+      fontSize: '0.8rem',
+    },
+    addButton: {
+      fontSize: '0.9rem',
+    },
+    submitButton: {
+      fontSize: '0.9rem',
+    },
+    imageRow: {
+      flexDirection: 'column', // Chuyển thành cột
+    },
+    roomRow: {
+      flexDirection: 'column', // Chuyển thành cột
+    },
   },
 };
 
