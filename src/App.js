@@ -6,7 +6,8 @@ import SignUp from './SignUp';
 import Login from './Login';
 import AddHotel from './AddHotel';
 import HotelList from './HotelList';
-import BookingManagement from './BookingManagement'; 
+import BookingManagement from './BookingManagement';
+import ChatBot from './ChatBot'; 
 
 function App() {
   const [user, setUser] = useState(null);
@@ -31,6 +32,7 @@ function App() {
           <Route path="/add-hotel" element={<AddHotel />} />
           <Route path="/hotel-list" element={<HotelList />} />
           <Route path="/booking-management" element={<BookingManagement />} />
+          <Route path="/chatbot" element={<ChatBot />} />
         </Routes>
       </div>
     </Router>
@@ -80,6 +82,16 @@ function Header({ user }) {
               onMouseOut={(e) => (e.target.style.color = styles.navItem.color)}
             >
               Quản lý Đơn Đặt Phòng
+            </Link>
+          </li>
+          <li>
+            <Link
+              to="/chatbot"
+              style={styles.navItem}
+              onMouseOver={(e) => (e.target.style.color = styles.navItemHover.color)}
+              onMouseOut={(e) => (e.target.style.color = styles.navItem.color)}
+            >
+              🤖 AI Assistant
             </Link>
           </li>
           {!user ? (
