@@ -1,7 +1,11 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-// Cấu hình Gemini AI - Sử dụng API key miễn phí
-const genAI = new GoogleGenerativeAI('AIzaSyA7FOKg0UMy_n_cFdgZakrHh6GOJXgAIhE');
+const apiKey = process.env.REACT_APP_GEMINI_API_KEY;
+if (!apiKey) {
+  // eslint-disable-next-line no-console
+  console.warn('Missing REACT_APP_GEMINI_API_KEY. Set it in .env.local');
+}
+const genAI = new GoogleGenerativeAI(apiKey || '');
 
 // Khởi tạo model Gemini
 export const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });

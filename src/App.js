@@ -4,6 +4,7 @@ import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { auth } from './firebaseConfig';
 import SignUp from './SignUp';
 import Login from './Login';
+import Home from './Home';
 import AddHotel from './AddHotel';
 import HotelList from './HotelList';
 import BookingManagement from './BookingManagement';
@@ -27,6 +28,7 @@ function App() {
 
         {/* Các route */}
         <Routes>
+          <Route path="/" element={<Home />} />
           <Route path="/signup" element={<SignUp />} />
           <Route path="/login" element={<Login />} />
           <Route path="/add-hotel" element={<AddHotel />} />
@@ -53,13 +55,16 @@ function Header({ user }) {
   return (
     <header style={styles.header}>
       <nav style={styles.nav}>
+        <div style={styles.brand} onClick={() => navigate('/')}> 
+          <span style={styles.brandGradient}>SmartStay</span>
+        </div>
         <ul style={styles.navList}>
           <li>
             <Link
               to="/hotel-list"
               style={styles.navItem}
-              onMouseOver={(e) => (e.target.style.color = styles.navItemHover.color)}
-              onMouseOut={(e) => (e.target.style.color = styles.navItem.color)}
+              onMouseOver={(e) => { e.currentTarget.style.background = styles.navItemHover.background; e.currentTarget.style.color = styles.navItemHover.color; }}
+              onMouseOut={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = styles.navItem.color; }}
             >
               Danh sách khách sạn
             </Link>
@@ -68,8 +73,8 @@ function Header({ user }) {
             <Link
               to="/add-hotel"
               style={styles.navItem}
-              onMouseOver={(e) => (e.target.style.color = styles.navItemHover.color)}
-              onMouseOut={(e) => (e.target.style.color = styles.navItem.color)}
+              onMouseOver={(e) => { e.currentTarget.style.background = styles.navItemHover.background; e.currentTarget.style.color = styles.navItemHover.color; }}
+              onMouseOut={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = styles.navItem.color; }}
             >
               Thêm khách sạn
             </Link>
@@ -78,8 +83,8 @@ function Header({ user }) {
             <Link
               to="/booking-management"
               style={styles.navItem}
-              onMouseOver={(e) => (e.target.style.color = styles.navItemHover.color)}
-              onMouseOut={(e) => (e.target.style.color = styles.navItem.color)}
+              onMouseOver={(e) => { e.currentTarget.style.background = styles.navItemHover.background; e.currentTarget.style.color = styles.navItemHover.color; }}
+              onMouseOut={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = styles.navItem.color; }}
             >
               Quản lý Đơn Đặt Phòng
             </Link>
@@ -88,8 +93,8 @@ function Header({ user }) {
             <Link
               to="/chatbot"
               style={styles.navItem}
-              onMouseOver={(e) => (e.target.style.color = styles.navItemHover.color)}
-              onMouseOut={(e) => (e.target.style.color = styles.navItem.color)}
+              onMouseOver={(e) => { e.currentTarget.style.background = styles.navItemHover.background; e.currentTarget.style.color = styles.navItemHover.color; }}
+              onMouseOut={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = styles.navItem.color; }}
             >
               🤖 AI Assistant
             </Link>
@@ -100,8 +105,8 @@ function Header({ user }) {
                 <Link
                   to="/signup"
                   style={styles.navItem}
-                  onMouseOver={(e) => (e.target.style.color = styles.navItemHover.color)}
-                  onMouseOut={(e) => (e.target.style.color = styles.navItem.color)}
+                  onMouseOver={(e) => { e.currentTarget.style.background = styles.navItemHover.background; e.currentTarget.style.color = styles.navItemHover.color; }}
+                  onMouseOut={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = styles.navItem.color; }}
                 >
                   Đăng ký
                 </Link>
@@ -110,8 +115,8 @@ function Header({ user }) {
                 <Link
                   to="/login"
                   style={styles.navItem}
-                  onMouseOver={(e) => (e.target.style.color = styles.navItemHover.color)}
-                  onMouseOut={(e) => (e.target.style.color = styles.navItem.color)}
+                  onMouseOver={(e) => { e.currentTarget.style.background = styles.navItemHover.background; e.currentTarget.style.color = styles.navItemHover.color; }}
+                  onMouseOut={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = styles.navItem.color; }}
                 >
                   Đăng nhập
                 </Link>
@@ -122,8 +127,8 @@ function Header({ user }) {
               <button
                 onClick={handleLogout}
                 style={styles.logoutButton}
-                onMouseOver={(e) => (e.target.style.color = styles.navItemHover.color)}
-                onMouseOut={(e) => (e.target.style.color = styles.logoutButton.color)}
+                onMouseOver={(e) => { e.currentTarget.style.background = styles.logoutButtonHover.background; e.currentTarget.style.color = styles.logoutButtonHover.color; }}
+                onMouseOut={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = styles.logoutButton.color; }}
               >
                 Đăng xuất
               </button>
@@ -191,22 +196,54 @@ function Header({ user }) {
 // };
 const styles = {
   header: {
-    backgroundColor: '#2c3e50',
-    padding: '15px 30px',
-    color: '#fff',
+    background: 'linear-gradient(90deg, rgba(124,58,237,0.12), rgba(6,182,212,0.12)), rgba(11,15,26,0.82)',
+    WebkitBackdropFilter: 'blur(10px)',
+    backdropFilter: 'blur(10px)',
+    borderBottom: '1px solid rgba(148,163,184,0.12)',
+    padding: '12px 20px',
+    color: '#e5e7eb',
     display: 'flex',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+    justifyContent: 'center',
     position: 'sticky',
     top: 0,
     zIndex: 1000,
+    boxShadow: '0 10px 30px rgba(0,0,0,0.25)',
   },
   nav: {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
     width: '100%',
+    maxWidth: 1200,
+  },
+  brand: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 8,
+    cursor: 'pointer',
+    userSelect: 'none',
+  },
+  brandGradient: {
+    background: 'linear-gradient(90deg,#d946ef,#22d3ee)',
+    WebkitBackgroundClip: 'text',
+    backgroundClip: 'text',
+    color: 'transparent',
+    fontWeight: 900,
+    fontSize: 22,
+    letterSpacing: '-0.02em',
+  },
+  brandLight: {
+    color: '#e2e8f0',
+    fontWeight: 700,
+  },
+  brandPill: {
+    marginLeft: 6,
+    fontSize: 12,
+    color: '#94a3b8',
+    border: '1px solid rgba(148,163,184,0.25)',
+    borderRadius: 999,
+    padding: '2px 6px',
   },
   navList: {
     listStyleType: 'none',
@@ -214,36 +251,42 @@ const styles = {
     padding: 0,
     margin: 0,
     width: '100%',
-    flexWrap: 'wrap', // Cho phép các mục xuống dòng trên màn hình nhỏ
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    marginLeft: 24,
   },
   navItem: {
-    color: '#ecf0f1',
-    margin: '0 20px',
+    color: '#e2e8f0',
+    margin: '0 14px',
     textDecoration: 'none',
-    fontSize: '16px',
-    fontWeight: '500',
-    padding: '8px 16px',
+    fontSize: '15px',
+    fontWeight: 600,
+    padding: '8px 12px',
     display: 'inline-block',
-    transition: 'color 0.3s ease',
+    borderRadius: 10,
+    transition: 'all 0.2s ease',
   },
   navItemHover: {
-    color: '#3498db', // Hover màu xanh
+    color: '#22d3ee',
+    background: 'rgba(148,163,184,0.08)',
   },
   logoutButtonContainer: {
-    marginLeft: 'auto', // Đẩy nút "Đăng xuất" sang góc phải
+    marginLeft: 'auto',
   },
   logoutButton: {
-    color: '#ecf0f1',
-    background: 'none',
-    border: 'none',
-    padding: '8px 16px',
-    fontSize: '16px',
-    fontWeight: '500',
+    color: '#e2e8f0',
+    background: 'transparent',
+    border: '1px solid rgba(148,163,184,0.25)',
+    borderRadius: 10,
+    padding: '8px 12px',
+    fontSize: '14px',
+    fontWeight: 600,
     cursor: 'pointer',
     textDecoration: 'none',
     display: 'inline-block',
-    transition: 'color 0.3s ease',
+    transition: 'all 0.2s ease',
   },
+  logoutButtonHover: { color: '#22d3ee', background: 'rgba(148,163,184,0.08)' },
   // Media query cho màn hình nhỏ hơn
   '@media (max-width: 768px)': {
     header: {

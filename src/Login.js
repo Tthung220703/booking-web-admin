@@ -13,7 +13,7 @@ function Login() {
     try {
       await signInWithEmailAndPassword(auth, email, password);
       alert('Đăng nhập thành công!');
-      navigate('/hotel-list'); // Điều hướng đến trang danh sách khách sạn
+      navigate('/');
     } catch (error) {
       console.error('Lỗi đăng nhập:', error.message);
     }
