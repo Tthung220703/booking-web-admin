@@ -3,6 +3,16 @@ import { db, auth } from './firebaseConfig';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
 import { sendMessageToGemini } from './geminiConfig';
+import './ChatBot.css'; // Import file CSS mới
+
+// Inline Icons SVG
+const Icons = {
+  Robot: () => <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" /></svg>,
+  User: () => <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>,
+  Send: () => <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>,
+  Hotel: () => <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>,
+  Booking: () => <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" /></svg>
+};
 
 function ChatBot() {
   const [messages, setMessages] = useState([]);
@@ -10,27 +20,17 @@ function ChatBot() {
   const [isLoading, setIsLoading] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [hotelData, setHotelData] = useState({});
-  const [bookingData, setBookingData] = useState([]);
   const messagesEndRef = useRef(null);
 
-  // Kiểm tra trạng thái đăng nhập và lấy dữ liệu
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         setIsLoggedIn(true);
         await fetchUserData(user.uid);
-        // Thêm tin nhắn chào mừng
+        // Tin nhắn mở đầu
         setMessages([{
           id: Date.now(),
-          text: `👋 Xin chào! Tôi là AI assistant của bạn. 
-
-Tôi có thể:
-• Trò chuyện thân thiện với bạn
-• Phân tích dữ liệu khách sạn (doanh thu, phòng trống, đơn đặt phòng...)
-• Tư vấn chiến lược kinh doanh
-• Hướng dẫn sử dụng hệ thống
-
-Hãy thử nói "Hello" hoặc hỏi tôi về khách sạn của bạn nhé! 😊`,
+          text: `👋 Xin chào! Tôi là trợ lý AI quản lý khách sạn.\n\nTôi có thể giúp bạn phân tích doanh thu, kiểm tra phòng trống, hoặc tư vấn chiến lược.\n\nHãy thử hỏi: "Tình hình kinh doanh tháng này thế nào?"`,
           isBot: true,
           timestamp: new Date()
         }]);
@@ -39,42 +39,35 @@ Hãy thử nói "Hello" hoặc hỏi tôi về khách sạn của bạn nhé! �
         setMessages([]);
       }
     });
-
     return () => unsubscribe();
   }, []);
 
-  // Lấy dữ liệu khách sạn và đơn đặt phòng
   const fetchUserData = async (userId) => {
     try {
-      // Lấy danh sách khách sạn
       const hotelsQuery = query(collection(db, 'hotels'), where('userId', '==', userId));
       const hotelsSnapshot = await getDocs(hotelsQuery);
       const hotels = hotelsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       
-      // Lấy danh sách đơn đặt phòng
       const bookingsQuery = query(collection(db, 'orders'), where('hotelOwnerId', '==', userId));
       const bookingsSnapshot = await getDocs(bookingsQuery);
       const bookings = bookingsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
       setHotelData({ hotels, bookings });
-      setBookingData(bookings);
     } catch (error) {
       console.error('Lỗi khi lấy dữ liệu:', error);
     }
   };
 
-  // Cuộn xuống tin nhắn mới nhất
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
+  }, [messages, isLoading]);
 
-  // Gửi tin nhắn
   const handleSendMessage = async (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
     if (!inputMessage.trim() || isLoading) return;
 
     const userMessage = {
@@ -89,8 +82,7 @@ Hãy thử nói "Hello" hoặc hỏi tôi về khách sạn của bạn nhé! �
     setIsLoading(true);
 
     try {
-      // Gửi tin nhắn đến Gemini với context dữ liệu
-      const response = await sendMessageToGemini(inputMessage, hotelData);
+      const response = await sendMessageToGemini(userMessage.text, hotelData);
       
       const botMessage = {
         id: Date.now() + 1,
@@ -98,321 +90,118 @@ Hãy thử nói "Hello" hoặc hỏi tôi về khách sạn của bạn nhé! �
         isBot: true,
         timestamp: new Date()
       };
-
       setMessages(prev => [...prev, botMessage]);
     } catch (error) {
-      console.error('Lỗi khi gửi tin nhắn:', error);
-      const errorMessage = {
+      console.error('Lỗi:', error);
+      setMessages(prev => [...prev, {
         id: Date.now() + 1,
-        text: 'Xin lỗi, có lỗi xảy ra. Vui lòng thử lại.',
+        text: '⚠️ Có lỗi kết nối. Vui lòng thử lại sau.',
         isBot: true,
         timestamp: new Date()
-      };
-      setMessages(prev => [...prev, errorMessage]);
+      }]);
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Gợi ý câu hỏi
   const suggestedQuestions = [
-    "Hello! Bạn khỏe không?",
-    "Tổng doanh thu tháng này là bao nhiêu?",
-    "Có bao nhiêu phòng trống hiện tại?",
-    "Bạn có thể giúp tôi gì?",
-    "Tư vấn chiến lược tăng doanh thu"
+    "Tổng doanh thu tháng này?",
+    "Khách sạn nào đông khách nhất?",
+    "Tỉ lệ lấp đầy phòng hiện tại?",
+    "Gợi ý cách tăng doanh thu"
   ];
-
-  const handleSuggestedQuestion = (question) => {
-    setInputMessage(question);
-  };
 
   if (!isLoggedIn) {
     return (
-      <div style={styles.container}>
-        <h2 style={styles.heading}>AI Assistant</h2>
-        <p style={styles.warning}>
-          Bạn cần phải <a href="/login" style={styles.link}>đăng nhập</a> để sử dụng AI assistant.
-        </p>
+      <div className="login-prompt">
+        <div className="prompt-box">
+          <Icons.Robot />
+          <h2>AI Assistant</h2>
+          <p>Bạn cần <a href="/login" style={{color: '#3b82f6', fontWeight: 'bold'}}>đăng nhập</a> để sử dụng trợ lý ảo.</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div style={styles.container}>
-      <div style={styles.header}>
-        <h2 style={styles.heading}>AI Assistant - Quản lý Khách sạn</h2>
-        <div style={styles.stats}>
-          <span style={styles.statItem}>🏨 {hotelData.hotels?.length || 0} khách sạn</span>
-          <span style={styles.statItem}>📋 {hotelData.bookings?.length || 0} đơn đặt phòng</span>
+    <div className="chat-wrapper">
+      <div className="chat-header">
+        <h2>
+          <span style={{color: '#8b5cf6'}}><Icons.Robot /></span> 
+          Trợ lý Khách sạn
+        </h2>
+        <div className="stats-container">
+          <span className="stat-badge">
+            <Icons.Hotel /> {hotelData.hotels?.length || 0} Khách sạn
+          </span>
+          <span className="stat-badge">
+            <Icons.Booking /> {hotelData.bookings?.length || 0} Đơn
+          </span>
         </div>
       </div>
 
-      <div style={styles.chatContainer}>
-        <div style={styles.messagesContainer}>
+      <div className="chat-window">
+        <div className="messages-area">
           {messages.map((message) => (
             <div
               key={message.id}
-              style={{
-                ...styles.message,
-                ...(message.isBot ? styles.botMessage : styles.userMessage)
-              }}
+              className={`message-row ${message.isBot ? 'bot' : 'user'}`}
             >
-              <div style={styles.messageContent}>
-                <div style={styles.messageText}>{message.text}</div>
-                <div style={styles.messageTime}>
-                  {message.timestamp.toLocaleTimeString('vi-VN', { 
-                    hour: '2-digit', 
-                    minute: '2-digit' 
-                  })}
-                </div>
+              <div className={`avatar ${message.isBot ? 'bot' : 'user'}`}>
+                {message.isBot ? <Icons.Robot /> : <Icons.User />}
+              </div>
+              <div className="bubble">
+                {message.text}
+                <span className="timestamp">
+                  {message.timestamp.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
+                </span>
               </div>
             </div>
           ))}
+          
           {isLoading && (
-            <div style={{ ...styles.message, ...styles.botMessage }}>
-              <div style={styles.messageContent}>
-                <div style={styles.typingIndicator}>AI đang suy nghĩ...</div>
-              </div>
+            <div className="message-row bot">
+               <div className="avatar bot"><Icons.Robot /></div>
+               <div className="bubble">
+                 <div className="typing-dots">
+                   <span></span><span></span><span></span>
+                 </div>
+               </div>
             </div>
           )}
           <div ref={messagesEndRef} />
         </div>
 
-        <div style={styles.suggestionsContainer}>
-          <div style={styles.suggestionsTitle}>Gợi ý câu hỏi:</div>
-          <div style={styles.suggestions}>
-            {suggestedQuestions.map((question, index) => (
-              <button
-                key={index}
-                style={styles.suggestionButton}
-                onClick={() => handleSuggestedQuestion(question)}
-              >
-                {question}
+        <div className="input-area">
+          <div className="suggestions-list">
+            {suggestedQuestions.map((q, idx) => (
+              <button key={idx} className="chip" onClick={() => setInputMessage(q)}>
+                {q}
               </button>
             ))}
           </div>
+          
+          <form onSubmit={handleSendMessage} className="input-form">
+            <input
+              type="text"
+              className="chat-input"
+              value={inputMessage}
+              onChange={(e) => setInputMessage(e.target.value)}
+              placeholder="Nhập câu hỏi của bạn..."
+              disabled={isLoading}
+            />
+            <button
+              type="submit"
+              className="btn-send"
+              disabled={isLoading || !inputMessage.trim()}
+            >
+              <Icons.Send />
+            </button>
+          </form>
         </div>
-
-        <form onSubmit={handleSendMessage} style={styles.inputForm}>
-          <input
-            type="text"
-            value={inputMessage}
-            onChange={(e) => setInputMessage(e.target.value)}
-            placeholder="Nói chuyện với tôi hoặc hỏi về khách sạn..."
-            style={styles.input}
-            disabled={isLoading}
-          />
-          <button
-            type="submit"
-            style={{
-              ...styles.sendButton,
-              ...(isLoading ? styles.sendButtonDisabled : {})
-            }}
-            disabled={isLoading || !inputMessage.trim()}
-          >
-            {isLoading ? '⏳' : '📤'}
-          </button>
-        </form>
       </div>
     </div>
   );
 }
-
-const styles = {
-  container: {
-    maxWidth: '1200px',
-    margin: '0 auto',
-    padding: '20px',
-    fontFamily: 'Arial, sans-serif',
-    backgroundColor: '#f5f5f5',
-    minHeight: '100vh',
-  },
-  header: {
-    textAlign: 'center',
-    marginBottom: '20px',
-    backgroundColor: '#fff',
-    padding: '20px',
-    borderRadius: '10px',
-    boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
-  },
-  heading: {
-    fontSize: '28px',
-    color: '#333',
-    marginBottom: '10px',
-  },
-  stats: {
-    display: 'flex',
-    justifyContent: 'center',
-    gap: '20px',
-    flexWrap: 'wrap',
-  },
-  statItem: {
-    backgroundColor: '#e3f2fd',
-    padding: '8px 16px',
-    borderRadius: '20px',
-    fontSize: '14px',
-    color: '#1976d2',
-  },
-  chatContainer: {
-    backgroundColor: '#fff',
-    borderRadius: '10px',
-    boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
-    overflow: 'hidden',
-    display: 'flex',
-    flexDirection: 'column',
-    height: '70vh',
-  },
-  messagesContainer: {
-    flex: 1,
-    padding: '20px',
-    overflowY: 'auto',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '15px',
-    background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
-  },
-  message: {
-    display: 'flex',
-    marginBottom: '10px',
-  },
-  userMessage: {
-    justifyContent: 'flex-end',
-  },
-  botMessage: {
-    justifyContent: 'flex-start',
-  },
-  messageContent: {
-    maxWidth: '70%',
-    padding: '12px 16px',
-    borderRadius: '18px',
-    position: 'relative',
-    boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-  },
-  userMessage: {
-    '& $messageContent': {
-      backgroundColor: '#007bff',
-      color: '#fff',
-    },
-  },
-  botMessage: {
-    '& $messageContent': {
-      backgroundColor: '#f8f9fa',
-      color: '#333',
-      border: '1px solid #e9ecef',
-    },
-  },
-  messageText: {
-    fontSize: '14px',
-    lineHeight: '1.6',
-    marginBottom: '5px',
-    whiteSpace: 'pre-wrap',
-    wordWrap: 'break-word',
-    overflowWrap: 'break-word',
-  },
-  messageTime: {
-    fontSize: '11px',
-    opacity: 0.7,
-  },
-  typingIndicator: {
-    fontStyle: 'italic',
-    color: '#666',
-  },
-  suggestionsContainer: {
-    padding: '15px 20px',
-    backgroundColor: '#f8f9fa',
-    borderTop: '1px solid #e9ecef',
-  },
-  suggestionsTitle: {
-    fontSize: '12px',
-    color: '#666',
-    marginBottom: '10px',
-    fontWeight: 'bold',
-  },
-  suggestions: {
-    display: 'flex',
-    flexWrap: 'wrap',
-    gap: '8px',
-  },
-  suggestionButton: {
-    backgroundColor: '#e3f2fd',
-    border: 'none',
-    padding: '6px 12px',
-    borderRadius: '15px',
-    fontSize: '12px',
-    color: '#1976d2',
-    cursor: 'pointer',
-    transition: 'background-color 0.2s',
-  },
-  inputForm: {
-    display: 'flex',
-    padding: '15px 20px',
-    backgroundColor: '#fff',
-    borderTop: '1px solid #e9ecef',
-  },
-  input: {
-    flex: 1,
-    padding: '12px 16px',
-    border: '1px solid #ddd',
-    borderRadius: '25px',
-    fontSize: '14px',
-    outline: 'none',
-    marginRight: '10px',
-  },
-  sendButton: {
-    backgroundColor: '#007bff',
-    color: '#fff',
-    border: 'none',
-    borderRadius: '50%',
-    width: '45px',
-    height: '45px',
-    cursor: 'pointer',
-    fontSize: '16px',
-    transition: 'background-color 0.2s',
-  },
-  sendButtonDisabled: {
-    backgroundColor: '#ccc',
-    cursor: 'not-allowed',
-  },
-  warning: {
-    textAlign: 'center',
-    color: '#e74c3c',
-    fontSize: '18px',
-  },
-  link: {
-    color: '#3498db',
-    textDecoration: 'underline',
-  },
-  // Responsive design
-  '@media (max-width: 768px)': {
-    container: {
-      padding: '10px',
-    },
-    heading: {
-      fontSize: '24px',
-    },
-    stats: {
-      flexDirection: 'column',
-      gap: '10px',
-    },
-    chatContainer: {
-      height: '60vh',
-    },
-    messageContent: {
-      maxWidth: '90%',
-      padding: '10px 14px',
-    },
-    messageText: {
-      fontSize: '13px',
-      lineHeight: '1.5',
-    },
-    suggestions: {
-      flexDirection: 'column',
-    },
-    suggestionButton: {
-      textAlign: 'left',
-    },
-  },
-};
 
 export default ChatBot;

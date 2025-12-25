@@ -1,94 +1,79 @@
-// geminiConfig.js
-import { GoogleGenAI } from "@google/genai"; 
+/**
+ * CẤU HÌNH KẾT NỐI PROXY BACKEND
+ */
+const PROXY_URL = "http://localhost:5001/api/gemini";
 
-
-const API_KEY = 'AIzaSyBEP6nNfWUQ4uhdtGzrL_6ivLc3E2WRt6Q';
-
-
-if (!API_KEY) {
-  console.warn("Chú ý: API key không được tìm thấy. Đặt VITE_GEMINI_API_KEY hoặc GEMINI_API_KEY.");
-}
-
-const ai = new GoogleGenAI({ apiKey: API_KEY });
-
-
+/**
+ * HÀM CHÍNH GỬI TIN NHẮN
+ */
 export const sendMessageToGemini = async (message, contextData = {}) => {
   try {
+    if (!message || !message.trim()) return "Dạ, Anh/Chị vui lòng nhập nội dung cần hỏi ạ.";
+
     const isDatabaseQuestion = checkIfDatabaseQuestion(message);
 
-    const systemPrompt = isDatabaseQuestion
-      ? `Bạn là một AI assistant chuyên giúp chủ phòng quản lý khách sạn. 
-Bạn có thể trả lời các câu hỏi về:
-- Thống kê doanh thu và đặt phòng
-- Quản lý phòng trống
-- Phân tích dữ liệu khách sạn
-- Tư vấn chiến lược kinh doanh
-- Hỗ trợ quản lý đơn đặt phòng
+    // THIẾT LẬP PHONG CÁCH "NGƯỜI THẬT"
+    const systemInstruction = isDatabaseQuestion
+      ? `Bạn là một người quản lý khách sạn chuyên nghiệp và tận tâm.
+QUY TẮC TRÒ CHUYỆN:
+1. Xưng hô: Tự xưng là "Em" và gọi người dùng là "Anh/Chị".
+2. Phong cách: Lịch sự, chân thành, giống như một cộng sự đang báo cáo trực tiếp. 
+3. Định dạng: Tuyệt đối KHÔNG dùng các ký tự Markdown như **, ##, ###, hoặc dấu sao ở đầu dòng.
+4. Trình bày: Hãy dùng xuống dòng để phân đoạn rõ ràng. Dùng các dấu gạch đầu dòng (-) đơn giản nếu cần liệt kê.
+5. Nội dung: Phân tích sâu vào dữ liệu khách sạn được cung cấp bên dưới nhưng giải thích bằng ngôn ngữ đời thường.
 
-Dữ liệu hiện tại của khách sạn:
-${JSON.stringify(contextData, null, 2)}
+DỮ LIỆU KHÁCH SẠN HIỆN TẠI:
+${JSON.stringify(contextData, null, 2)}`
+      : `Bạn là trợ lý ảo thân thiện của hệ thống quản lý khách sạn. 
+Hãy trò chuyện vui vẻ, ngắn gọn bằng tiếng Việt. 
+Xưng em, gọi Anh/Chị. KHÔNG dùng ký tự lạ như ** hay ##.`;
 
-Hãy trả lời câu hỏi của người dùng một cách hữu ích và chính xác dựa trên dữ liệu có sẵn.`
-      : `Bạn là một AI assistant thân thiện và hữu ích.
-Bạn có thể:
-- Trò chuyện tự nhiên với người dùng
-- Chào hỏi và hỏi thăm
-- Trả lời các câu hỏi chung
-- Hướng dẫn sử dụng hệ thống quản lý khách sạn
-
-Hãy trả lời thân thiện, tự nhiên và dễ hiểu.`;
-
-
-    const result = await ai.models.generateContent({
-      model: "gemini-2.0-flash",
-      contents: [
-        {
-          role: "user",
-          parts: [
-            { text: `${systemPrompt}\n\nTin nhắn của người dùng: ${message}` },
-          ],
-        },
-      ],
+    const response = await fetch(PROXY_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents: [
+          {
+            role: "user",
+            parts: [{ text: `${systemInstruction}\n\nCâu hỏi của Anh/Chị: ${message}` }]
+          }
+        ],
+        generationConfig: {
+      temperature: 0.7,      // Độ sáng tạo (0.7 là mức ổn định cho báo cáo)
+      maxOutputTokens: 2048, // Tăng lên 2048 hoặc cao hơn để AI viết đủ ý
+      topP: 0.95,
+      topK: 40
+    }
+      })
     });
-    console.log("Gemini raw result:", result);
 
-    // Parse kết quả an toàn
-  if (result?.candidates?.length) {
-      const parts = result.candidates[0]?.content?.parts;
-      if (parts?.length) {
-        const text = parts.map(p => p.text || "").join("\n");
-        return text || "(Không có phản hồi)";
-      }
+    const data = await response.json();
+
+    if (!response.ok) {
+      if (response.status === 429) return "Dạ, hiện tại hệ thống đang hơi quá tải một chút, Anh/Chị đợi em vài giây rồi hỏi lại nhé.";
+      throw new Error(data.error || "Lỗi kết nối");
     }
 
-    return "(Không có phản hồi)";
+    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+    
+    // Hậu xử lý: Một lần nữa đảm bảo không còn ký tự lạ lọt lưới
+    return text ? text.replace(/[#*]/g, "").trim() : "Dạ, em chưa tìm thấy câu trả lời phù hợp cho ý này ạ.";
+
   } catch (error) {
-    console.error("❌ Lỗi khi gửi tin nhắn đến Gemini:", error);
-    const msg = error?.message || "";
-
-    if (msg.includes("404") || error?.status === 404) {
-      return "Lỗi: Model không tồn tại hoặc API key không hợp lệ. Kiểm tra model name & Google Cloud Console.";
-    } else if (msg.includes("403") || error?.status === 403) {
-      return "Lỗi: API key không có quyền truy cập.";
-    } else if (msg.includes("429") || error?.status === 429) {
-      return "Lỗi: Đã vượt quá giới hạn yêu cầu (429). Thử lại sau hoặc giảm tần suất.";
-    }
-    return "Xin lỗi, đã có lỗi xảy ra khi gọi Gemini.";
+    console.error("❌ Lỗi Frontend:", error);
+    return "Dạ, kết nối với máy chủ của em đang gặp chút vấn đề, Anh/Chị kiểm tra lại giúp em nhé.";
   }
 };
 
-// Kiểm tra từ khóa liên quan DB
+/**
+ * BỘ LỌC TỪ KHÓA LIÊN QUAN ĐẾN DỮ LIỆU
+ */
 const checkIfDatabaseQuestion = (message) => {
-  if (!message) return false;
-  const databaseKeywords = [
-    "doanh thu","thu nhập","tiền","giá","phòng","khách sạn","homestay",
-    "đặt phòng","booking","đơn hàng","thống kê","phân tích","dữ liệu",
-    "trống","có sẵn","số lượng","tổng","tính","báo cáo","bảng",
-    "khách hàng","người đặt","check-in","check-out","thanh toán",
-    "xác nhận","hủy","trả phòng","tình trạng","hiện tại","tháng",
-    "tuần","ngày","năm","revenue","booking","room","hotel"
+  const keywords = [
+    "doanh thu", "thu nhập", "tiền", "giá", "phòng", "khách sạn", "homestay",
+    "đặt phòng", "booking", "đơn hàng", "thống kê", "phân tích", "dữ liệu",
+    "trống", "có sẵn", "báo cáo", "khách hàng", "tháng", "ngày", "năm"
   ];
   const lower = message.toLowerCase();
-  return databaseKeywords.some(k => lower.includes(k));
+  return keywords.some(k => lower.includes(k));
 };
-
