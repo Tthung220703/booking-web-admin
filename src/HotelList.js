@@ -2,16 +2,39 @@ import React, { useState, useEffect } from 'react';
 import { db, auth } from './firebaseConfig';
 import { collection, query, where, getDocs, deleteDoc, doc, updateDoc } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
-import './HotelList.css'; // Đảm bảo import file CSS
+import './HotelList.css';
+
+// --- 1. SVG ICONS COMPONENTS ---
+const Icons = {
+  Location: () => <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>,
+  Home: () => <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>,
+  Edit: () => <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>,
+  Trash: () => <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+};
+
+// --- 2. HELPER FUNCTIONS (Tách khỏi Component) ---
+// Tính tổng số phòng trống
+const calculateTotalRooms = (rooms) => {
+  if (!rooms || !Array.isArray(rooms)) return 0;
+  return rooms.reduce((acc, room) => acc + (parseInt(room.available) || 0), 0);
+};
+
+// Tìm giá thấp nhất để hiển thị "Chỉ từ..."
+const getLowestPrice = (rooms) => {
+  if (!rooms || !Array.isArray(rooms) || rooms.length === 0) return 0;
+  const prices = rooms.map(r => parseInt(r.price) || 0).filter(p => p > 0);
+  return prices.length > 0 ? Math.min(...prices) : 0;
+};
 
 function HotelList() {
+  // --- State Management ---
   const [hotels, setHotels] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [editHotel, setEditHotel] = useState(null); 
-  // eslint-disable-next-line no-unused-vars
+  const [editHotel, setEditHotel] = useState(null); // Lưu object khách sạn đang chỉnh sửa
   const [user, setUser] = useState(null);
 
+  // --- 3. AUTH & DATA FETCHING ---
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       if (currentUser) {
@@ -19,18 +42,16 @@ function HotelList() {
         fetchHotels(currentUser.uid);
       } else {
         setUser(null);
-        setError('Bạn cần đăng nhập để xem danh sách khách sạn');
+        setError('Vui lòng đăng nhập để quản lý danh sách.');
         setLoading(false);
       }
     });
-
     return () => unsubscribe();
   }, []);
 
   const fetchHotels = async (userId) => {
-    const q = query(collection(db, 'hotels'), where('userId', '==', userId));
-
     try {
+      const q = query(collection(db, 'hotels'), where('userId', '==', userId));
       const querySnapshot = await getDocs(q);
       const hotelList = querySnapshot.docs.map((doc) => ({
         id: doc.id,
@@ -38,261 +59,221 @@ function HotelList() {
       }));
       setHotels(hotelList);
     } catch (err) {
-      setError('Lỗi khi tải dữ liệu');
-      console.error('Lỗi khi lấy danh sách khách sạn:', err);
+      setError('Không thể tải dữ liệu. Vui lòng thử lại.');
+      console.error(err);
     } finally {
       setLoading(false);
     }
   };
 
+  // --- 4. CRUD ACTIONS (Delete & Update) ---
   const handleDelete = async (id) => {
-    if (window.confirm('Bạn có chắc muốn xóa khách sạn này?')) {
+    if (window.confirm('Cảnh báo: Bạn có chắc muốn xóa vĩnh viễn khách sạn này?')) {
       try {
-        const hotelRef = doc(db, 'hotels', id);
-        await deleteDoc(hotelRef);
-        setHotels(hotels.filter((hotel) => hotel.id !== id));
+        await deleteDoc(doc(db, 'hotels', id));
+        setHotels(prev => prev.filter((hotel) => hotel.id !== id));
       } catch (err) {
-        console.error('Lỗi khi xóa khách sạn:', err);
-        alert('Lỗi khi xóa khách sạn');
+        alert('Lỗi khi xóa: ' + err.message);
       }
     }
   };
 
-  const handleEdit = (hotel) => {
-    setEditHotel(hotel);
-  };
-
-  const closeEdit = () => {
-    setEditHotel(null);
-  }
-
   const handleUpdate = async (e) => {
     e.preventDefault();
     if (!editHotel) return;
-
-    const hotelRef = doc(db, 'hotels', editHotel.id);
     try {
-      await updateDoc(hotelRef, {
-        hotelName: editHotel.hotelName,
-        pricePerNight: editHotel.pricePerNight || '', // Đảm bảo không undefined
-        address: editHotel.address || '',
-        city: editHotel.city || '',
-        description: editHotel.description,
-        mainImage: editHotel.mainImage,
-        subImages: editHotel.subImages,
-        amenities: editHotel.amenities || [],
-        rooms: editHotel.rooms,
-        type: editHotel.type,
+      // Cập nhật lên Firestore
+      await updateDoc(doc(db, 'hotels', editHotel.id), {
+        ...editHotel,
+        pricePerNight: editHotel.pricePerNight || '', // Giữ lại field cũ nếu cần tương thích ngược
       });
-      setHotels(hotels.map((hotel) => (hotel.id === editHotel.id ? editHotel : hotel)));
-      setEditHotel(null);
-      alert('Cập nhật thành công!');
+      
+      // Cập nhật lại UI local ngay lập tức
+      setHotels(prev => prev.map((hotel) => (hotel.id === editHotel.id ? editHotel : hotel)));
+      setEditHotel(null); // Đóng modal
+      alert('Đã cập nhật thông tin thành công!');
     } catch (err) {
-      console.error('Lỗi khi cập nhật:', err);
-      alert('Lỗi khi cập nhật khách sạn');
+      console.error(err);
+      alert('Cập nhật thất bại.');
     }
   };
 
-  /* --- Helper Functions for Arrays --- */
-  const addSubImage = () => {
-    setEditHotel({ ...editHotel, subImages: [...editHotel.subImages, ''] });
-  };
-
-  const removeSubImage = (index) => {
-    const updatedImages = editHotel.subImages.filter((_, i) => i !== index);
-    setEditHotel({ ...editHotel, subImages: updatedImages });
-  };
-
+  // --- 5. FORM HANDLERS (Dynamic Inputs) ---
+  // Xử lý thay đổi mảng SubImages (Ảnh phụ)
   const updateSubImage = (index, value) => {
-    const updatedImages = [...editHotel.subImages];
-    updatedImages[index] = value;
-    setEditHotel({ ...editHotel, subImages: updatedImages });
+    const newImages = [...editHotel.subImages];
+    newImages[index] = value;
+    setEditHotel({ ...editHotel, subImages: newImages });
   };
-
-  const addRoom = () => {
-    setEditHotel({
-      ...editHotel,
-      rooms: [...editHotel.rooms, { roomType: '', price: '', available: '' }],
-    });
-  };
-
+  const addSubImage = () => setEditHotel({ ...editHotel, subImages: [...editHotel.subImages, ''] });
+  const removeSubImage = (i) => setEditHotel({ ...editHotel, subImages: editHotel.subImages.filter((_, idx) => idx !== i) });
+  
+  // Xử lý thay đổi mảng Rooms (Phòng)
   const updateRoom = (index, field, value) => {
-    const updatedRooms = [...editHotel.rooms];
-    updatedRooms[index][field] = value;
-    setEditHotel({ ...editHotel, rooms: updatedRooms });
+    const newRooms = [...editHotel.rooms];
+    newRooms[index][field] = value;
+    setEditHotel({ ...editHotel, rooms: newRooms });
   };
+  const addRoom = () => setEditHotel({ ...editHotel, rooms: [...editHotel.rooms, { roomType: '', price: '', available: '' }] });
+  const removeRoom = (i) => setEditHotel({ ...editHotel, rooms: editHotel.rooms.filter((_, idx) => idx !== i) });
 
-  const removeRoom = (index) => {
-    const updatedRooms = editHotel.rooms.filter((_, i) => i !== index);
-    setEditHotel({ ...editHotel, rooms: updatedRooms });
-  };
 
-  if (loading) return <div className="loading">Đang tải danh sách...</div>;
-  if (error) return <div className="error">{error}</div>;
+  // --- 6. RENDER LOGIC ---
+  if (loading) return <div className="loading-state"><div className="spinner"></div> Đang tải dữ liệu...</div>;
+  if (error) return <div className="error-state">{error}</div>;
 
   return (
-    <div className="container">
-      <h2 className="heading">Quản lý Khách sạn</h2>
+    <div className="dashboard-container">
+      {/* HEADER SECTION */}
+      <div className="dashboard-header">
+        <h2>Quản Lý Chỗ Nghỉ</h2>
+        <p className="subtitle">Bạn đang quản lý {hotels.length} địa điểm</p>
+      </div>
 
-      {/* --- EDIT MODAL --- */}
+      {/* LIST VIEW SECTION */}
+      {hotels.length === 0 ? (
+        <div className="empty-state">Chưa có khách sạn nào được đăng ký.</div>
+      ) : (
+        <div className="hotel-grid">
+          {hotels.map((hotel) => {
+            const totalRooms = calculateTotalRooms(hotel.rooms);
+            const startPrice = getLowestPrice(hotel.rooms);
+
+            return (
+              <div key={hotel.id} className="hotel-card">
+                {/* Image & Badges */}
+                <div className="card-image-wrapper">
+                  <img 
+                    src={hotel.mainImage || 'https://via.placeholder.com/400x300?text=No+Image'} 
+                    alt={hotel.hotelName} 
+                    className="card-image"
+                    onError={(e) => {e.target.onerror = null; e.target.src = 'https://via.placeholder.com/400x300?text=Error'}} 
+                  />
+                  <span className={`badge-type ${hotel.type}`}>
+                    {hotel.type === 'homestay' ? 'Homestay' : hotel.type === 'resort' ? 'Resort' : 'Hotel'}
+                  </span>
+                  <div className="price-overlay">
+                    <small>Chỉ từ</small>
+                    <strong>{startPrice.toLocaleString('vi-VN')} đ</strong>
+                  </div>
+                </div>
+
+                {/* Content Info */}
+                <div className="card-content">
+                  <h3 className="card-title">{hotel.hotelName}</h3>
+                  <div className="card-meta">
+                    <span className="meta-item location" title={hotel.address}>
+                      <Icons.Location /> {hotel.city || 'Chưa cập nhật'}
+                    </span>
+                  </div>
+                  
+                  {/* Status Bar: Available Rooms */}
+                  <div className="room-status-bar">
+                    <div className="status-label">
+                      <Icons.Home /> Tình trạng phòng
+                    </div>
+                    <div className={`status-value ${totalRooms > 0 ? 'available' : 'sold-out'}`}>
+                       {totalRooms > 0 ? `${totalRooms} phòng trống` : 'Hết phòng'}
+                    </div>
+                  </div>
+
+                  <p className="card-desc">{hotel.description}</p>
+
+                  <div className="card-actions">
+                    <button onClick={() => setEditHotel(hotel)} className="btn-action edit">
+                      <Icons.Edit /> Sửa
+                    </button>
+                    <button onClick={() => handleDelete(hotel.id)} className="btn-action delete">
+                      <Icons.Trash /> Xóa
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* MODAL POPUP (Chỉ hiện khi editHotel có dữ liệu) */}
       {editHotel && (
-        <div className="modal-overlay" onClick={closeEdit}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-backdrop" onClick={() => setEditHotel(null)}>
+          <div className="modal-panel" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h3>Sửa thông tin: {editHotel.hotelName}</h3>
-              <button type="button" className="icon-btn" onClick={closeEdit}>✕</button>
+              <h3>Chỉnh sửa thông tin</h3>
+              <button className="close-btn" onClick={() => setEditHotel(null)}>✕</button>
             </div>
             
-            <form onSubmit={handleUpdate}>
-              <div className="form-group">
-                <label className="form-label">Tên chỗ nghỉ</label>
-                <input
-                  className="form-input"
-                  type="text"
-                  value={editHotel.hotelName}
-                  onChange={(e) => setEditHotel({ ...editHotel, hotelName: e.target.value })}
-                  required
-                />
-              </div>
-
-              <div className="form-group" style={{display: 'flex', gap: '10px'}}>
-                <div style={{flex: 1}}>
-                    <label className="form-label">Loại hình</label>
-                    <select
-                    className="form-select"
-                    value={editHotel.type}
-                    onChange={(e) => setEditHotel({ ...editHotel, type: e.target.value })}
-                    >
-                    <option value="hotel">Khách sạn</option>
-                    <option value="homestay">Homestay</option>
-                    <option value="resort">Resort</option>
-                    </select>
+            <form onSubmit={handleUpdate} className="modal-body">
+              {/* --- Phần 1: Thông tin cơ bản --- */}
+              <div className="form-section">
+                <h4>Thông tin chung</h4>
+                <div className="input-group">
+                    <label>Tên chỗ nghỉ</label>
+                    <input 
+                      type="text" value={editHotel.hotelName} required
+                      onChange={(e) => setEditHotel({ ...editHotel, hotelName: e.target.value })}
+                    />
                 </div>
-                <div style={{flex: 1}}>
-                     <label className="form-label">Thành phố</label>
-                     <input
-                        className="form-input"
-                        type="text"
-                        value={editHotel.city || ''}
-                        onChange={(e) => setEditHotel({ ...editHotel, city: e.target.value })}
-                        placeholder="VD: Đà Lạt"
-                     />
+                <div className="row-2-col">
+                    <div className="input-group">
+                        <label>Loại hình</label>
+                        <select value={editHotel.type} onChange={(e) => setEditHotel({ ...editHotel, type: e.target.value })}>
+                            <option value="hotel">Khách sạn</option>
+                            <option value="homestay">Homestay</option>
+                            <option value="resort">Resort</option>
+                        </select>
+                    </div>
+                    <div className="input-group">
+                        <label>Thành phố</label>
+                        <input type="text" value={editHotel.city} onChange={(e) => setEditHotel({ ...editHotel, city: e.target.value })} />
+                    </div>
+                </div>
+                <div className="input-group">
+                    <label>Mô tả ngắn</label>
+                    <textarea rows="3" value={editHotel.description} onChange={(e) => setEditHotel({ ...editHotel, description: e.target.value })}></textarea>
+                </div>
+                 <div className="input-group">
+                    <label>Ảnh đại diện (URL)</label>
+                    <input type="url" value={editHotel.mainImage} onChange={(e) => setEditHotel({ ...editHotel, mainImage: e.target.value })} />
                 </div>
               </div>
 
-              <div className="form-group">
-                <label className="form-label">Mô tả</label>
-                <textarea
-                  className="form-textarea"
-                  rows="4"
-                  value={editHotel.description}
-                  onChange={(e) => setEditHotel({ ...editHotel, description: e.target.value })}
-                />
+              {/* --- Phần 2: Quản lý Danh sách phòng --- */}
+              <div className="form-section">
+                <h4>Danh sách phòng & Giá</h4>
+                <div className="room-list-editor">
+                    {editHotel.rooms.map((room, idx) => (
+                        <div key={idx} className="room-editor-item">
+                            <input placeholder="Tên loại phòng" value={room.roomType} onChange={(e) => updateRoom(idx, 'roomType', e.target.value)} className="input-room-name"/>
+                            <input type="number" placeholder="Giá (VND)" value={room.price} onChange={(e) => updateRoom(idx, 'price', e.target.value)} className="input-room-price"/>
+                            <input type="number" placeholder="SL" value={room.available} onChange={(e) => updateRoom(idx, 'available', e.target.value)} className="input-room-qty"/>
+                            <button type="button" onClick={() => removeRoom(idx)} className="btn-icon-del">✕</button>
+                        </div>
+                    ))}
+                    <button type="button" className="btn-add-dashed" onClick={addRoom}>+ Thêm loại phòng</button>
+                </div>
               </div>
 
-              <div className="form-group">
-                <label className="form-label">Link Ảnh Chính</label>
-                <input
-                  className="form-input"
-                  type="url"
-                  value={editHotel.mainImage}
-                  onChange={(e) => setEditHotel({ ...editHotel, mainImage: e.target.value })}
-                />
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">Ảnh phụ</label>
-                {editHotel.subImages.map((image, index) => (
-                  <div key={index} className="sub-image-row">
-                    <input
-                      className="form-input"
-                      type="url"
-                      placeholder="URL ảnh"
-                      value={image}
-                      onChange={(e) => updateSubImage(index, e.target.value)}
-                    />
-                    <button type="button" className="icon-btn" onClick={() => removeSubImage(index)}>🗑️</button>
-                  </div>
+               {/* --- Phần 3: Ảnh bộ sưu tập --- */}
+               <div className="form-section">
+                <h4>Ảnh bộ sưu tập</h4>
+                {editHotel.subImages.map((img, idx) => (
+                    <div key={idx} className="sub-img-row">
+                        <input type="url" placeholder="URL ảnh phụ" value={img} onChange={(e) => updateSubImage(idx, e.target.value)} />
+                        <button type="button" onClick={() => removeSubImage(idx)} className="btn-icon-del">✕</button>
+                    </div>
                 ))}
-                <button type="button" className="btn btn-add" onClick={addSubImage}>+ Thêm ảnh phụ</button>
+                <button type="button" className="btn-text-add" onClick={addSubImage}>+ Thêm link ảnh</button>
               </div>
 
-              <div className="form-group">
-                <label className="form-label">Quản lý phòng</label>
-                {editHotel.rooms.map((room, index) => (
-                  <div key={index} className="room-row">
-                    <input
-                      className="form-input"
-                      placeholder="Loại (VD: Đơn)"
-                      value={room.roomType}
-                      onChange={(e) => updateRoom(index, 'roomType', e.target.value)}
-                    />
-                    <input
-                      className="form-input"
-                      type="number"
-                      placeholder="Giá"
-                      value={room.price}
-                      onChange={(e) => updateRoom(index, 'price', e.target.value)}
-                    />
-                    <input
-                      className="form-input"
-                      type="number"
-                      placeholder="SL"
-                      style={{width: '60px'}}
-                      value={room.available}
-                      onChange={(e) => updateRoom(index, 'available', e.target.value)}
-                    />
-                    <button type="button" className="icon-btn" onClick={() => removeRoom(index)}>🗑️</button>
-                  </div>
-                ))}
-                <button type="button" className="btn btn-add" onClick={addRoom}>+ Thêm phòng</button>
-              </div>
-
-              <div className="modal-actions">
-                <button type="button" className="btn btn-close" onClick={closeEdit}>Hủy bỏ</button>
-                <button type="submit" className="btn btn-edit">Lưu thay đổi</button>
+              {/* Modal Footer Actions */}
+              <div className="modal-footer">
+                 <button type="button" className="btn-cancel" onClick={() => setEditHotel(null)}>Hủy</button>
+                 <button type="submit" className="btn-save">Lưu thay đổi</button>
               </div>
             </form>
           </div>
         </div>
-      )}
-
-      {/* --- HOTEL LIST --- */}
-      {hotels.length === 0 ? (
-        <p style={{textAlign: 'center', color: '#666'}}>Chưa có khách sạn nào.</p>
-      ) : (
-        <ul className="hotel-list">
-          {hotels.map((hotel) => (
-            <li key={hotel.id} className="hotel-item">
-              <img src={hotel.mainImage} alt={hotel.hotelName} className="hotel-image" />
-              <div className="hotel-info">
-                <div className="hotel-header">
-                  <h3 className="hotel-name">{hotel.hotelName}</h3>
-                  <span className="hotel-badge">
-                    {hotel.type === 'homestay' ? 'Homestay' : 'Hotel'}
-                  </span>
-                </div>
-                
-                {hotel.city && (
-                    <div className="hotel-location">
-                        📍 {hotel.city}
-                    </div>
-                )}
-
-                <p className="hotel-description">{hotel.description}</p>
-              </div>
-              
-              <div className="button-container">
-                <button onClick={() => handleEdit(hotel)} className="btn btn-edit">
-                  Sửa
-                </button>
-                <button onClick={() => handleDelete(hotel.id)} className="btn btn-delete">
-                  Xóa
-                </button>
-              </div>
-            </li>
-          ))}
-        </ul>
       )}
     </div>
   );

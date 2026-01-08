@@ -12,7 +12,7 @@ export const sendMessageToGemini = async (message, contextData = {}) => {
 
     const isDatabaseQuestion = checkIfDatabaseQuestion(message);
 
-    // THIẾT LẬP PHONG CÁCH "NGƯỜI THẬT"
+    // THIẾT LẬP PHONG CÁCH 
     const systemInstruction = isDatabaseQuestion
       ? `Bạn là một người quản lý khách sạn chuyên nghiệp và tận tâm.
 QUY TẮC TRÒ CHUYỆN:
@@ -39,7 +39,7 @@ Xưng em, gọi Anh/Chị. KHÔNG dùng ký tự lạ như ** hay ##.`;
           }
         ],
         generationConfig: {
-      temperature: 0.7,      // Độ sáng tạo (0.7 là mức ổn định cho báo cáo)
+      temperature: 0.7,      // Độ sáng tạo 
       maxOutputTokens: 2048, // Tăng lên 2048 hoặc cao hơn để AI viết đủ ý
       topP: 0.95,
       topK: 40

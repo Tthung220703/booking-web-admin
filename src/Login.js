@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from './firebaseConfig';
 import { useNavigate } from 'react-router-dom';
-import './Auth.css'; // Import CSS mới
+import './Auth.css';
 
-// Inline Icons
+// Inline Icons - Giữ nguyên bộ icon để code gọn nhẹ
 const Icons = {
   Mail: () => <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>,
   Lock: () => <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>,
@@ -16,9 +16,9 @@ const Icons = {
 function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false); // State ẩn/hiện mật khẩu
-  const [error, setError] = useState(''); // State thông báo lỗi
-  const [loading, setLoading] = useState(false); // State loading khi đang đăng nhập
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
@@ -28,25 +28,23 @@ function Login() {
 
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      // Đăng nhập thành công thì chuyển hướng ngay, không cần alert phiền phức
-      navigate('/');
+      navigate('/'); // Chuyển hướng về trang chủ sau khi đăng nhập
     } catch (error) {
       console.error('Lỗi đăng nhập:', error.code);
-      // Xử lý thông báo lỗi thân thiện hơn
       switch (error.code) {
         case 'auth/user-not-found':
         case 'auth/wrong-password':
-        case 'auth/invalid-credential': // Firebase mới thường trả về mã này
+        case 'auth/invalid-credential':
           setError('Email hoặc mật khẩu không chính xác.');
           break;
         case 'auth/too-many-requests':
-          setError('Quá nhiều lần thử. Vui lòng thử lại sau.');
+          setError('Quá nhiều lần thử. Vui lòng đợi lát nữa.');
           break;
         case 'auth/invalid-email':
             setError('Định dạng email không hợp lệ.');
             break;
         default:
-          setError('Đăng nhập thất bại. Vui lòng kiểm tra lại đường truyền.');
+          setError('Đăng nhập thất bại. Vui lòng kiểm tra kết nối.');
       }
     } finally {
       setLoading(false);
@@ -58,23 +56,23 @@ function Login() {
       <div className="auth-card">
         <div className="auth-header">
           <h2>Chào mừng trở lại!</h2>
-          <p>Đăng nhập để quản lý khách sạn của bạn</p>
+          <p>Đăng nhập để quản lý hệ thống</p>
         </div>
 
         {error && (
           <div className="error-box">
-            <Icons.Alert /> {error}
+            <Icons.Alert /> <span>{error}</span>
           </div>
         )}
 
         <form onSubmit={handleLogin} className="auth-form">
-          {/* Email Input */}
           <div className="input-group">
+            <label>Email</label>
             <div className="input-wrapper">
-              <span className="input-icon"><Icons.Mail /></span>
+              {/* <span className="input-icon"><Icons.Mail /></span> */}
               <input
                 type="email"
-                placeholder="Email của bạn"
+                placeholder="name@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -83,13 +81,13 @@ function Login() {
             </div>
           </div>
 
-          {/* Password Input */}
           <div className="input-group">
+            <label>Mật khẩu</label>
             <div className="input-wrapper">
-              <span className="input-icon"><Icons.Lock /></span>
+              {/* <span className="input-icon"><Icons.Lock /></span> */}
               <input
                 type={showPassword ? "text" : "password"}
-                placeholder="Mật khẩu"
+                placeholder="Nhập mật khẩu"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -99,7 +97,7 @@ function Login() {
                 type="button"
                 className="toggle-password"
                 onClick={() => setShowPassword(!showPassword)}
-                tabIndex="-1" // Không focus vào nút này khi nhấn Tab
+                tabIndex="-1"
               >
                 {showPassword ? <Icons.EyeOff /> : <Icons.Eye />}
               </button>
@@ -113,10 +111,7 @@ function Login() {
 
         <div className="auth-footer">
           <span>Chưa có tài khoản? </span>
-          <button 
-            onClick={() => navigate('/signup')} 
-            className="link-btn"
-          >
+          <button onClick={() => navigate('/signup')} className="link-btn">
             Đăng ký ngay
           </button>
         </div>

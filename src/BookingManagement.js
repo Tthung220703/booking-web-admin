@@ -1,291 +1,353 @@
 import React, { useState, useEffect } from 'react';
 import { collection, query, onSnapshot, updateDoc, doc, getDoc, where } from 'firebase/firestore';
 import { db, auth } from './firebaseConfig';
-import './BookingManagement.css'; // Import file CSS mới
+import './BookingManagement.css';
 
-// Inline SVG Icons cho giao diện nhất quán và nhẹ
+// --- BỘ ICON SVG ---
 const Icons = {
-  Check: () => <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>,
-  X: () => <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>,
-  Dollar: () => <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
-  LogOut: () => <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>,
-  Print: () => <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>,
-  UserX: () => <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M13 7a4 4 0 11-8 0 4 4 0 018 0zM9 14a6 6 0 00-6 6v1h12v-1a6 6 0 00-6-6zM21 12h-6" /></svg>
+  Check: () => <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>,
+  X: () => <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>,
+  Dollar: () => <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
+  LogOut: () => <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>,
+  Print: () => <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>,
+  UserX: () => <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M13 7a4 4 0 11-8 0 4 4 0 018 0zM9 14a6 6 0 00-6 6v1h12v-1a6 6 0 00-6-6zM21 12h-6" /></svg>,
+  Filter: () => <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" /></svg>
 };
 
 const BookingManagement = () => {
     const [orders, setOrders] = useState([]);
     const [hotelNames, setHotelNames] = useState({});
-    const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const [loading, setLoading] = useState(true);
+    const [user, setUser] = useState(null);
 
+    // --- STATE CHO BỘ LỌC ---
+    const [filterDate, setFilterDate] = useState('');
+    const [filterStatus, setFilterStatus] = useState('all'); // 'all', 'Đang chờ duyệt', ...
+    const [filterHotel, setFilterHotel] = useState('all');   // 'all' hoặc hotelId
+
+    // Kiểm tra đăng nhập
     useEffect(() => {
-        const unsubscribeAuth = auth.onAuthStateChanged((user) => {
-            setIsLoggedIn(!!user);
+        const unsubscribe = auth.onAuthStateChanged((currentUser) => {
+            setUser(currentUser);
+            if (!currentUser) setLoading(false);
         });
-        return () => unsubscribeAuth();
+        return () => unsubscribe();
     }, []);
 
+    // Lấy dữ liệu Realtime
     useEffect(() => {
-        if (!isLoggedIn) return;
-        const user = auth.currentUser;
         if (!user) return;
 
         const q = query(collection(db, 'orders'), where('hotelOwnerId', '==', user.uid));
-        const unsubscribeOrders = onSnapshot(q, async (snapshot) => {
-            const fetchedOrders = snapshot.docs.map((doc) => ({
+        
+        const unsubscribe = onSnapshot(q, async (snapshot) => {
+            const fetchedOrders = snapshot.docs.map(doc => ({
                 id: doc.id,
-                ...doc.data(),
+                ...doc.data()
             }));
-            // Sắp xếp đơn mới nhất lên đầu
+
             fetchedOrders.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
             setOrders(fetchedOrders);
 
-            const hotelIds = [...new Set(fetchedOrders.map((order) => order.hotelId))];
-            const hotelNameMap = {};
-            await Promise.all(
-                hotelIds.map(async (hotelId) => {
-                    const hotelDoc = await getDoc(doc(db, 'hotels', hotelId));
-                    if (hotelDoc.exists()) {
-                        hotelNameMap[hotelId] = hotelDoc.data().hotelName;
-                    }
-                })
-            );
-            setHotelNames(hotelNameMap);
+            const hotelIds = [...new Set(fetchedOrders.map(o => o.hotelId))];
+            const nameMap = {};
+            await Promise.all(hotelIds.map(async (hid) => {
+                if(!nameMap[hid]) {
+                   const hSnap = await getDoc(doc(db, 'hotels', hid));
+                   if (hSnap.exists()) nameMap[hid] = hSnap.data().hotelName;
+                }
+            }));
+            setHotelNames(nameMap);
+            setLoading(false);
         });
 
-        return () => unsubscribeOrders();
-    }, [isLoggedIn]);
+        return () => unsubscribe();
+    }, [user]);
 
-    // Hàm xác định class màu sắc cho badge trạng thái
-    const getStatusClass = (status) => {
-        switch (status) {
-            case 'Đang chờ duyệt': return 'pending';
-            case 'Đã xác nhận': return 'confirmed';
-            case 'Đã thanh toán': return 'paid';
-            case 'Đã trả phòng': return 'checked-out';
-            case 'Đã hủy': 
-            case 'Người dùng không đến': return 'cancelled';
-            default: return '';
+    // Update Status
+    const updateOrderStatus = async (orderId, newStatus) => {
+        if(!window.confirm(`Bạn chắc chắn muốn chuyển trạng thái thành "${newStatus}"?`)) return;
+
+        try {
+            const orderRef = doc(db, 'orders', orderId);
+            const orderSnap = await getDoc(orderRef);
+            if (!orderSnap.exists()) return;
+            
+            const orderData = orderSnap.data();
+
+            if (newStatus === 'Đã thanh toán' && orderData.status !== 'Đã thanh toán') {
+                const hotelRef = doc(db, 'hotels', orderData.hotelId);
+                const hotelSnap = await getDoc(hotelRef);
+                if (hotelSnap.exists()) {
+                    const hotelData = hotelSnap.data();
+                    const updatedRooms = hotelData.rooms.map(room => {
+                        if (room.roomType === orderData.roomType) {
+                            return { ...room, available: room.available - orderData.roomCount };
+                        }
+                        return room;
+                    });
+                    
+                    const targetRoom = updatedRooms.find(r => r.roomType === orderData.roomType);
+                    if (targetRoom && targetRoom.available < 0) {
+                        alert('Cảnh báo: Số lượng phòng này hiện không đủ trong hệ thống!');
+                    }
+                    await updateDoc(hotelRef, { rooms: updatedRooms });
+                }
+            }
+            await updateDoc(orderRef, { status: newStatus });
+        } catch (err) {
+            console.error(err);
+            alert('Lỗi cập nhật: ' + err.message);
         }
     };
 
+    // Check Out
+    const handleCheckOut = async (orderId) => {
+        if(!window.confirm('Xác nhận khách đã trả phòng? Kho phòng sẽ được cộng lại.')) return;
+        try {
+            const orderRef = doc(db, 'orders', orderId);
+            const orderSnap = await getDoc(orderRef);
+            if (!orderSnap.exists()) return;
+            const orderData = orderSnap.data();
+
+            const hotelRef = doc(db, 'hotels', orderData.hotelId);
+            const hotelSnap = await getDoc(hotelRef);
+            
+            if (hotelSnap.exists()) {
+                 const hotelData = hotelSnap.data();
+                 const updatedRooms = hotelData.rooms.map(room => 
+                    room.roomType === orderData.roomType 
+                    ? { ...room, available: room.available + orderData.roomCount } 
+                    : room
+                 );
+                 await updateDoc(hotelRef, { rooms: updatedRooms });
+            }
+            await updateDoc(orderRef, { status: 'Đã trả phòng' });
+        } catch (err) {
+            console.error(err);
+            alert('Lỗi khi trả phòng: ' + err.message);
+        }
+    };
+
+    // In hóa đơn
     const exportInvoice = (order) => {
-        const invoiceContent = `
+        const content = `
         <html>
             <head>
-                <title>Hóa Đơn ${order.id.slice(0, 6)}</title>
+                <title>INVOICE-${order.id}</title>
                 <style>
-                    body { font-family: 'Segoe UI', Arial, sans-serif; padding: 40px; color: #333; }
-                    .invoice-box { max-width: 800px; margin: auto; padding: 30px; border: 1px solid #eee; box-shadow: 0 0 10px rgba(0, 0, 0, 0.15); }
-                    .header { text-align: center; margin-bottom: 40px; }
-                    .header h1 { margin: 0; color: #3b82f6; }
+                    body { font-family: 'Helvetica', sans-serif; padding: 40px; color: #333; line-height: 1.6; }
+                    .box { max-width: 700px; margin: 0 auto; border: 1px solid #eee; padding: 30px; box-shadow: 0 0 15px rgba(0,0,0,0.05); }
+                    .header { border-bottom: 2px solid #3b82f6; padding-bottom: 20px; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center; }
+                    .header h1 { color: #3b82f6; margin: 0; font-size: 24px; }
+                    .meta { font-size: 14px; color: #666; text-align: right; }
                     .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px; }
-                    .info-item label { font-weight: bold; color: #666; display: block; font-size: 0.9em; }
-                    .total { margin-top: 30px; text-align: right; font-size: 1.5em; color: #3b82f6; font-weight: bold; border-top: 2px solid #eee; padding-top: 20px; }
+                    .label { font-weight: bold; color: #555; display: block; font-size: 13px; text-transform: uppercase; margin-bottom: 4px; }
+                    .val { font-size: 16px; }
+                    .total-box { background: #f8fafc; padding: 20px; text-align: right; border-radius: 8px; margin-top: 20px; }
+                    .total-price { font-size: 28px; font-weight: bold; color: #3b82f6; }
+                    .footer { text-align: center; margin-top: 40px; font-size: 13px; color: #999; }
                 </style>
             </head>
             <body>
-                <div class="invoice-box">
+                <div class="box">
                     <div class="header">
                         <h1>HÓA ĐƠN ĐẶT PHÒNG</h1>
-                        <p>Mã đơn: ${order.id}</p>
+                        <div class="meta">Mã: #${order.id.slice(-6).toUpperCase()}<br>Ngày in: ${new Date().toLocaleDateString('vi-VN')}</div>
                     </div>
                     <div class="info-grid">
-                        <div class="info-item"><label>Khách sạn:</label> ${hotelNames[order.hotelId] || '...'}</div>
-                        <div class="info-item"><label>Khách hàng:</label> ${order.userName}</div>
-                        <div class="info-item"><label>SĐT:</label> ${order.phoneNumber}</div>
-                        <div class="info-item"><label>Loại phòng:</label> ${order.roomType}</div>
-                        <div class="info-item"><label>Số lượng:</label> ${order.roomCount}</div>
-                        <div class="info-item"><label>Ngày nhận:</label> ${new Date(order.checkInDate).toLocaleDateString('vi-VN')}</div>
-                        <div class="info-item"><label>Ngày trả:</label> ${new Date(order.checkOutDate).toLocaleDateString('vi-VN')}</div>
+                        <div><span class="label">Khách sạn</span><div class="val">${hotelNames[order.hotelId] || 'Hệ thống'}</div></div>
+                        <div><span class="label">Khách hàng</span><div class="val">${order.userName}</div></div>
+                        <div><span class="label">Số điện thoại</span><div class="val">${order.phoneNumber}</div></div>
+                        <div><span class="label">Loại phòng</span><div class="val">${order.roomType} (x${order.roomCount})</div></div>
+                        <div><span class="label">Check-in</span><div class="val">${new Date(order.checkInDate).toLocaleDateString('vi-VN')}</div></div>
+                        <div><span class="label">Check-out</span><div class="val">${new Date(order.checkOutDate).toLocaleDateString('vi-VN')}</div></div>
                     </div>
-                    <div class="total">
-                        Tổng cộng: ${order.totalPrice.toLocaleString('vi-VN')} VND
+                    <div class="total-box">
+                        <span class="label">Tổng thanh toán</span>
+                        <div class="total-price">${order.totalPrice?.toLocaleString('vi-VN')} VND</div>
                     </div>
-                    <p style="text-align: center; margin-top: 50px; color: #888;">Cảm ơn quý khách đã sử dụng dịch vụ!</p>
+                    <div class="footer">Cảm ơn quý khách đã sử dụng dịch vụ!</div>
                 </div>
+                <script>window.print();</script>
             </body>
-        </html>
-        `;
-        const printWindow = window.open('', '_blank');
-        printWindow.document.write(invoiceContent);
-        printWindow.document.close();
-        printWindow.print();
+        </html>`;
+        const win = window.open('', '_blank');
+        win.document.write(content);
+        win.document.close();
     };
 
-    const updateOrderStatus = async (orderId, status) => {
-        try {
-            const orderRef = doc(db, 'orders', orderId);
-            const orderSnapshot = await getDoc(orderRef);
-
-            if (!orderSnapshot.exists()) return;
-
-            const orderData = orderSnapshot.data();
-            const hotelRef = doc(db, 'hotels', orderData.hotelId);
-            const hotelSnapshot = await getDoc(hotelRef);
-
-            if (!hotelSnapshot.exists()) return;
-
-            const hotelData = hotelSnapshot.data();
-
-            if (status === 'Đã xác nhận' && orderData.status !== 'Đã xác nhận') {
-                const updatedRooms = hotelData.rooms.map((room) =>
-                    room.roomType === orderData.roomType
-                        ? { ...room, available: room.available - orderData.roomCount }
-                        : room
-                );
-                
-                const roomToUpdate = updatedRooms.find(r => r.roomType === orderData.roomType);
-                if (roomToUpdate && roomToUpdate.available < 0) {
-                    alert('Không đủ phòng trống!');
-                    return;
-                }
-                await updateDoc(hotelRef, { rooms: updatedRooms });
-            }
-
-            if (status === 'Người dùng không đến') {
-                const updatedRooms = hotelData.rooms.map((room) =>
-                    room.roomType === orderData.roomType
-                        ? { ...room, available: room.available + orderData.roomCount }
-                        : room
-                );
-                await updateDoc(hotelRef, { rooms: updatedRooms });
-            }
-
-            await updateDoc(orderRef, { status });
-        } catch (error) {
-            console.error('Lỗi:', error);
-            alert('Có lỗi xảy ra.');
-        }
-    };
-
-    const handleCheckOut = async (orderId) => {
-        try {
-            const orderRef = doc(db, 'orders', orderId);
-            const orderSnapshot = await getDoc(orderRef);
-            if (!orderSnapshot.exists()) return;
-
-            const orderData = orderSnapshot.data();
-            const hotelRef = doc(db, 'hotels', orderData.hotelId);
-            const hotelSnapshot = await getDoc(hotelRef);
-            if (!hotelSnapshot.exists()) return;
-
-            const hotelData = hotelSnapshot.data();
-            const updatedRooms = hotelData.rooms.map((room) =>
-                room.roomType === orderData.roomType
-                    ? { ...room, available: room.available + orderData.roomCount }
-                    : room
+    // --- LOGIC LỌC TỔNG HỢP (DATE + STATUS + HOTEL) ---
+    const displayedOrders = orders.filter(o => {
+        // 1. Lọc theo Ngày (nếu có chọn)
+        let matchDate = true;
+        if (filterDate && o.checkInDate) {
+            const orderDate = new Date(o.checkInDate);
+            const searchDate = new Date(filterDate);
+            matchDate = (
+                orderDate.getDate() === searchDate.getDate() &&
+                orderDate.getMonth() === searchDate.getMonth() &&
+                orderDate.getFullYear() === searchDate.getFullYear()
             );
-
-            await updateDoc(hotelRef, { rooms: updatedRooms });
-            await updateDoc(orderRef, { status: 'Đã trả phòng' });
-        } catch (error) {
-            console.error('Lỗi trả phòng:', error);
         }
-    };
 
-    if (!isLoggedIn) {
-        return (
-            <div className="login-prompt">
-                <div className="prompt-card">
-                    <h2>🔒 Yêu cầu truy cập</h2>
-                    <p>Vui lòng <a href="/login" className="prompt-link">đăng nhập</a> để quản lý đơn đặt phòng.</p>
-                </div>
-            </div>
-        );
+        // 2. Lọc theo Trạng thái
+        const matchStatus = filterStatus === 'all' || o.status === filterStatus;
+
+        // 3. Lọc theo Khách sạn
+        const matchHotel = filterHotel === 'all' || o.hotelId === filterHotel;
+
+        return matchDate && matchStatus && matchHotel;
+    });
+
+    // Reset bộ lọc
+    const clearFilters = () => {
+        setFilterDate('');
+        setFilterStatus('all');
+        setFilterHotel('all');
     }
 
+    const getStatusStyle = (s) => {
+        switch(s) {
+            case 'Đang chờ duyệt': return 'badge-pending';
+            case 'Đã xác nhận': return 'badge-confirmed';
+            case 'Đã thanh toán': return 'badge-paid';
+            case 'Đã trả phòng': return 'badge-out';
+            case 'Đã hủy': case 'Người dùng không đến': return 'badge-cancel';
+            default: return '';
+        }
+    }
+
+    if (!user && !loading) return <div className="login-req">Vui lòng <a href="/login">đăng nhập</a> để quản lý.</div>;
+
     return (
-        <div className="booking-container">
-            <div className="booking-header">
-                <h1>Quản lý Đặt Phòng</h1>
-            </div>
-            
-            <div className="table-card">
-                <div className="table-responsive">
-                    <table className="booking-table">
-                        <thead>
-                            <tr>
-                                <th>Khách sạn</th>
-                                <th>Khách hàng</th>
-                                <th>Chi tiết phòng</th>
-                                <th>Thời gian</th>
-                                <th>Tổng tiền</th>
-                                <th>Trạng thái</th>
-                                <th style={{textAlign: 'center'}}>Hành động</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {orders.length === 0 ? (
-                                <tr>
-                                    <td colSpan="7" style={{textAlign: 'center', padding: '30px', color: '#888'}}>
-                                        Chưa có đơn đặt phòng nào.
-                                    </td>
-                                </tr>
-                            ) : orders.map((order) => (
-                                <tr key={order.id}>
-                                    <td>
-                                        <div style={{fontWeight: 'bold'}}>{hotelNames[order.hotelId] || '...'}</div>
-                                    </td>
-                                    <td>
-                                        <div>{order.userName}</div>
-                                        <div style={{fontSize: '0.85em', color: '#666'}}>{order.phoneNumber}</div>
-                                    </td>
-                                    <td>
-                                        <div>{order.roomType}</div>
-                                        <div style={{fontSize: '0.85em', color: '#666'}}>x{order.roomCount} phòng</div>
-                                    </td>
-                                    <td>
-                                        <div>Check-in: {new Date(order.checkInDate).toLocaleDateString('vi-VN')}</div>
-                                        <div style={{fontSize: '0.85em', color: '#666'}}>Check-out: {new Date(order.checkOutDate).toLocaleDateString('vi-VN')}</div>
-                                    </td>
-                                    <td style={{fontWeight: 'bold', color: '#3b82f6'}}>
-                                        {order.totalPrice.toLocaleString('vi-VN')} đ
-                                    </td>
-                                    <td>
-                                        <span className={`status-badge ${getStatusClass(order.status)}`}>
-                                            {order.status}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <div className="action-buttons" style={{justifyContent: 'center'}}>
-                                            {order.status === 'Đang chờ duyệt' && (
-                                                <>
-                                                    <button className="btn-action btn-confirm" onClick={() => updateOrderStatus(order.id, 'Đã xác nhận')} title="Xác nhận">
-                                                        <Icons.Check /> <span>Duyệt</span>
-                                                    </button>
-                                                    <button className="btn-action btn-cancel" onClick={() => updateOrderStatus(order.id, 'Đã hủy')} title="Hủy bỏ">
-                                                        <Icons.X /> <span>Hủy</span>
-                                                    </button>
-                                                </>
-                                            )}
-                                            
-                                            {order.status === 'Đã xác nhận' && (
-                                                <>
-                                                    <button className="btn-action btn-pay" onClick={() => updateOrderStatus(order.id, 'Đã thanh toán')} title="Đã thanh toán">
-                                                        <Icons.Dollar /> <span>Đã TT</span>
-                                                    </button>
-                                                    <button className="btn-action btn-cancel" onClick={() => updateOrderStatus(order.id, 'Người dùng không đến')} title="Khách không đến">
-                                                        <Icons.UserX /> <span>Vắng</span>
-                                                    </button>
-                                                </>
-                                            )}
-                                            
-                                            {order.status === 'Đã thanh toán' && (
-                                                <button className="btn-action btn-checkout" onClick={() => handleCheckOut(order.id)} title="Trả phòng">
-                                                    <Icons.LogOut /> <span>Trả phòng</span>
-                                                </button>
-                                            )}
-                                            
-                                            <button className="btn-action btn-print" onClick={() => exportInvoice(order)} title="In hóa đơn">
-                                                <Icons.Print />
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
+        <div className="manage-page">
+            <div className="manage-container">
+                {/* --- HEADER & FILTERS --- */}
+                <div className="manage-header">
+                    <div>
+                        <h1>Quản lý Đặt phòng</h1>
+                        <p className="subtitle">Theo dõi đơn hàng và trạng thái phòng</p>
+                    </div>
+                    
+                    <div className="filter-group">
+                        {/* Lọc Khách Sạn */}
+                        <select 
+                            className="filter-select" 
+                            value={filterHotel} 
+                            onChange={(e) => setFilterHotel(e.target.value)}
+                        >
+                            <option value="all">--- Tất cả Khách sạn ---</option>
+                            {Object.entries(hotelNames).map(([id, name]) => (
+                                <option key={id} value={id}>{name}</option>
                             ))}
-                        </tbody>
-                    </table>
+                        </select>
+
+                        {/* Lọc Trạng Thái */}
+                        <select 
+                            className="filter-select"
+                            value={filterStatus}
+                            onChange={(e) => setFilterStatus(e.target.value)}
+                        >
+                            <option value="all">--- Tất cả Trạng thái ---</option>
+                            <option value="Đang chờ duyệt">Đang chờ duyệt</option>
+                            <option value="Đã xác nhận">Đã xác nhận</option>
+                            <option value="Đã thanh toán">Đã thanh toán</option>
+                            <option value="Đã trả phòng">Đã trả phòng</option>
+                            <option value="Đã hủy">Đã hủy</option>
+                            <option value="Người dùng không đến">Khách không đến</option>
+                        </select>
+
+                        {/* Lọc Ngày */}
+                        <input 
+                            type="date" 
+                            value={filterDate}
+                            onChange={(e) => setFilterDate(e.target.value)}
+                            className="date-input"
+                        />
+                        
+                        {/* Nút Xóa Lọc */}
+                        {(filterDate || filterStatus !== 'all' || filterHotel !== 'all') && (
+                            <button className="btn-clear" onClick={clearFilters}>Xóa lọc</button>
+                        )}
+                    </div>
+                </div>
+
+                {/* --- TABLE CONTENT --- */}
+                <div className="table-wrapper table-responsive">
+                    {loading ? (
+                        <div className="loading-state">Đang tải dữ liệu...</div>
+                    ) : (
+                        <table className="modern-table">
+                            <thead>
+                                <tr>
+                                    <th>Khách hàng</th>
+                                    <th>Chi tiết phòng</th>
+                                    <th>Thời gian</th>
+                                    <th>Tổng tiền</th>
+                                    <th>Trạng thái</th>
+                                    <th className="text-center">Hành động</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {displayedOrders.length === 0 ? (
+                                    <tr><td colSpan="6" className="empty-row">
+                                        Không tìm thấy đơn nào phù hợp với bộ lọc.
+                                    </td></tr>
+                                ) : displayedOrders.map((order) => (
+                                    <tr key={order.id}>
+                                        <td>
+                                            <div className="fw-bold">{order.userName}</div>
+                                            <div className="text-sub">{order.phoneNumber}</div>
+                                            <div className="text-hotel">{hotelNames[order.hotelId]}</div>
+                                        </td>
+                                        <td>
+                                            <div className="fw-500">{order.roomType}</div>
+                                            <div className="text-sub">SL: {order.roomCount} phòng</div>
+                                        </td>
+                                        <td>
+                                            <div className="date-tag in">{new Date(order.checkInDate).toLocaleDateString('vi-VN')}</div>
+                                            <span className="arrow">→</span>
+                                            <div className="date-tag out">{new Date(order.checkOutDate).toLocaleDateString('vi-VN')}</div>
+                                        </td>
+                                        <td>
+                                            <div className="price-tag">{order.totalPrice?.toLocaleString('vi-VN')} đ</div>
+                                        </td>
+                                        <td>
+                                            <span className={`status-badge ${getStatusStyle(order.status)}`}>
+                                                {order.status}
+                                            </span>
+                                        </td>
+                                        <td className="actions-cell">
+                                            <div className="btn-group">
+                                                {order.status === 'Đang chờ duyệt' && (
+                                                    <>
+                                                        <button className="btn-icon success" title="Duyệt đơn" onClick={() => updateOrderStatus(order.id, 'Đã xác nhận')}><Icons.Check /></button>
+                                                        <button className="btn-icon danger" title="Hủy bỏ" onClick={() => updateOrderStatus(order.id, 'Đã hủy')}><Icons.X /></button>
+                                                    </>
+                                                )}
+
+                                                {order.status === 'Đã xác nhận' && (
+                                                    <>
+                                                        <button className="btn-pill primary" onClick={() => updateOrderStatus(order.id, 'Đã thanh toán')}><Icons.Dollar /> Thanh toán</button>
+                                                        <button className="btn-icon danger" title="Khách không đến" onClick={() => updateOrderStatus(order.id, 'Người dùng không đến')}><Icons.UserX /></button>
+                                                    </>
+                                                )}
+
+                                                {order.status === 'Đã thanh toán' && (
+                                                    <button className="btn-pill dark" onClick={() => handleCheckOut(order.id)}><Icons.LogOut /> Trả phòng</button>
+                                                )}
+
+                                                {(order.status === 'Đã thanh toán' || order.status === 'Đã trả phòng') && (
+                                                     <button className="btn-icon normal" title="In hóa đơn" onClick={() => exportInvoice(order)}><Icons.Print /></button>
+                                                )}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    )}
                 </div>
             </div>
         </div>

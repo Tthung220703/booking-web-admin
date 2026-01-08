@@ -1,198 +1,301 @@
-/* BookingManagement.css - Phiên bản Fix Layout */
+/* =========================================
+   BOOKING MANAGEMENT - DASHBOARD STYLE
+   ========================================= */
 
 :root {
-  /* Bảng màu chuẩn */
-  --primary-color: #3b82f6;   /* Xanh dương */
-  --success-color: #10b981;   /* Xanh lá */
-  --danger-color: #ef4444;    /* Đỏ */
-  --warning-color: #f59e0b;   /* Vàng cam */
-  --text-primary: #1f2937;    /* Chữ đen xám */
-  --text-secondary: #6b7280;  /* Chữ xám nhạt */
-  --bg-color: #f3f4f6;        /* Nền web */
-  --card-bg: #ffffff;         /* Nền khung trắng */
-  --border-color: #e5e7eb;    /* Viền */
-  
-  /* Hiệu ứng */
-  --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  --radius: 12px;
+  --primary: #3b82f6;
+  --primary-dark: #2563eb;
+  --success: #10b981;
+  --danger: #ef4444;
+  --warning: #f59e0b;
+  --dark: #1e293b;
+  --gray: #64748b;
+  --light-gray: #f1f5f9;
+  --border: #e2e8f0;
+  --card-bg: #ffffff;
+  --bg-body: #f8fafc;
 }
 
-/* --- Layout Chung --- */
-.booking-container {
+/* .manage-page {
+  background-color: var(--bg-body);
+  min-height: 100vh;
+  font-family: 'Inter', 'Segoe UI', sans-serif;
+  padding: 40px 20px;
+  color: var(--dark);
+}
+
+.manage-container {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 40px 20px;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background-color: var(--bg-color);
+} */
+
+.manage-page {
+  background-color: var(--bg-body);
   min-height: 100vh;
-  color: var(--text-primary);
+  font-family: 'Inter', 'Segoe UI', sans-serif;
+  padding: 20px; /* Giảm padding trên dưới chút cho đỡ tốn diện tích */
+  color: var(--dark);
 }
 
-.booking-header {
-  text-align: center;
-  margin-bottom: 2rem;
+.manage-container {
+  /* CŨ: max-width: 1200px; -> Xóa hoặc comment lại */
+  
+  /* MỚI: Cho phép rộng ra tùy theo màn hình */
+  width: 100%;       
+  max-width: 1600px; /* Hoặc để 100% nếu muốn full màn hình luôn */
+  margin: 0 auto;
+}
+/* --- HEADER SECTION --- */
+.manage-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 20px;
 }
 
-.booking-header h1 {
-  font-size: 2rem;
-  font-weight: 700;
-  color: var(--text-primary);
+.manage-header h1 {
   margin: 0;
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: var(--dark);
 }
 
-/* --- Table Card & Container --- */
-.table-card {
-  background: var(--card-bg);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  border: 1px solid var(--border-color);
-  overflow: hidden; /* Để bo góc hoạt động tốt */
-}
-
-.table-responsive {
-  width: 100%;
-  overflow-x: auto; /* Cho phép cuộn ngang trên mobile */
-  -webkit-overflow-scrolling: touch;
-}
-
-/* --- Bảng Dữ Liệu --- */
-.booking-table {
-  width: 100%;
-  border-collapse: collapse;
-  white-space: nowrap; /* Quan trọng: Giữ nội dung trên 1 dòng */
-}
-
-.booking-table th {
-  background-color: #f8fafc;
-  color: var(--text-secondary);
-  font-weight: 600;
-  text-transform: uppercase;
-  font-size: 0.75rem;
-  letter-spacing: 0.05em;
-  padding: 16px;
-  text-align: left;
-  border-bottom: 2px solid var(--border-color);
-}
-
-.booking-table td {
-  padding: 16px;
-  vertical-align: middle;
-  border-bottom: 1px solid var(--border-color);
+.subtitle {
+  margin: 4px 0 0 0;
+  color: var(--gray);
   font-size: 0.95rem;
 }
 
-.booking-table tbody tr:last-child td {
-  border-bottom: none;
-}
-
-.booking-table tbody tr:hover {
-  background-color: #f9fafb; /* Highlight dòng khi di chuột */
-}
-
-/* --- Cột Hành Động (Đã Fix Lỗi Layout) --- */
-/* Đặt chiều rộng tối thiểu cho cột cuối để không bị bóp nghẹt */
-.booking-table td:last-child {
-  min-width: 140px; 
-  text-align: center;
-}
-
-.action-buttons {
+/* Filter Box */
+.filter-box {
   display: flex;
-  gap: 8px;
-  flex-wrap: nowrap; /* Quan trọng: Ép các nút luôn nằm ngang, không xuống dòng */
-  justify-content: center;
   align-items: center;
+  background: var(--card-bg);
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
 }
 
-.btn-action {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 8px; /* Padding vuông vắn để hiển thị icon đẹp */
-  border-radius: 6px;
+.filter-icon {
+  color: var(--gray);
+  margin-right: 8px;
+  display: flex;
+}
+
+.date-input {
   border: none;
+  font-family: inherit;
+  color: var(--dark);
+  outline: none;
   font-size: 0.9rem;
+}
+
+.filter-box button {
+  margin-left: 10px;
+  background: #fee2e2;
+  color: var(--danger);
+  border: none;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.75rem;
   cursor: pointer;
-  transition: all 0.2s ease;
-  line-height: 1;
-}
-
-/* Mặc định: Ẩn chữ, chỉ hiện Icon để tiết kiệm chỗ */
-.btn-action span {
-  display: none;
-}
-
-/* Màu sắc các nút */
-.btn-confirm { background-color: var(--success-color); color: white; }
-.btn-confirm:hover { background-color: #059669; }
-
-.btn-cancel { background-color: #fee2e2; color: var(--danger-color); }
-.btn-cancel:hover { background-color: #fecaca; }
-
-.btn-pay { background-color: var(--primary-color); color: white; }
-.btn-pay:hover { background-color: #2563eb; }
-
-.btn-checkout { background-color: #4b5563; color: white; }
-.btn-checkout:hover { background-color: #374151; }
-
-.btn-print { background-color: white; border: 1px solid var(--border-color); color: var(--text-secondary); }
-.btn-print:hover { border-color: var(--primary-color); color: var(--primary-color); }
-
-/* --- Badge Trạng Thái --- */
-.status-badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 4px 12px;
-  border-radius: 9999px;
-  font-size: 0.8rem;
   font-weight: 600;
 }
 
-.status-badge.pending { background-color: #fef3c7; color: #d97706; } /* Vàng */
-.status-badge.confirmed { background-color: #dcfce7; color: #166534; } /* Xanh lá */
-.status-badge.paid { background-color: #dbeafe; color: #1e40af; } /* Xanh dương */
-.status-badge.checked-out { background-color: #f3f4f6; color: #374151; border: 1px solid #d1d5db; } /* Xám */
-.status-badge.cancelled, .status-badge.no-show { background-color: #fee2e2; color: #991b1b; } /* Đỏ */
+/* --- TABLE STYLES --- */
+.table-wrapper {
+  background: var(--card-bg);
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  overflow-x: auto; /* Cho phép cuộn ngang trên mobile */
+}
 
-/* --- Màn hình Login (Nếu chưa đăng nhập) --- */
-.login-prompt {
+.modern-table {
+  width: 100%;
+  border-collapse: collapse;
+  white-space: nowrap; /* Giữ nội dung trên 1 dòng */
+}
+
+.modern-table thead {
+  background-color: #f8fafc;
+  border-bottom: 2px solid var(--border);
+}
+
+.modern-table th {
+  padding: 16px 20px;
+  text-align: left;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--gray);
+  font-weight: 700;
+}
+
+.modern-table td {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+
+.modern-table tr:last-child td {
+  border-bottom: none;
+}
+
+.modern-table tr:hover {
+  background-color: #f8fafc;
+}
+
+/* Text Utilities inside Table */
+.fw-bold { font-weight: 700; color: var(--dark); font-size: 0.95rem; }
+.fw-500 { font-weight: 600; color: var(--dark); font-size: 0.95rem; }
+.text-sub { font-size: 0.85rem; color: var(--gray); margin-top: 2px; }
+.text-hotel { font-size: 0.75rem; color: var(--primary); font-weight: 600; text-transform: uppercase; margin-top: 4px; letter-spacing: 0.5px; }
+
+/* Date Tags */
+.date-tag {
+  display: inline-block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+.date-tag.in { color: var(--primary); background: #eff6ff; }
+.date-tag.out { color: var(--gray); background: #f1f5f9; }
+.arrow { margin: 0 6px; color: #cbd5e1; font-size: 0.8rem; }
+
+/* Price */
+.price-tag {
+  font-family: 'Consolas', monospace;
+  font-weight: 700;
+  color: var(--dark);
+  font-size: .9rem;
+}
+
+/* Status Badges */
+.status-badge {
+  padding: 4px 8px;
+  border-radius: 50px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+.badge-pending { background: #fff7ed; color: #ea580c; border: 1px solid #ffedd5; }
+.badge-confirmed { background: #ecfccb; color: #4d7c0f; border: 1px solid #d9f99d; }
+.badge-paid { background: #eff6ff; color: #1d4ed8; border: 1px solid #dbeafe; }
+.badge-out { background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; }
+.badge-cancel { background: #fef2f2; color: #b91c1c; text-decoration: line-through; }
+
+/* --- ACTIONS COLUMN --- */
+.actions-cell {
+  text-align: right; /* Đẩy nút sang phải */
+}
+.text-center { text-align: center !important; }
+
+.btn-group {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end; /* Căn phải các nút */
+}
+
+/* Button Styles */
+.btn-icon, .btn-pill {
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Icon Only Button */
+.btn-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+}
+.btn-icon.success { background: #dcfce7; color: #15803d; }
+.btn-icon.success:hover { background: #bbf7d0; }
+
+.btn-icon.danger { background: #fee2e2; color: #b91c1c; }
+.btn-icon.danger:hover { background: #fecaca; }
+
+.btn-icon.normal { background: white; border: 1px solid var(--border); color: var(--gray); }
+.btn-icon.normal:hover { border-color: var(--primary); color: var(--primary); }
+
+/* Pill Button (Text + Icon) */
+.btn-pill {
+  padding: 4px 10px;
+  border-radius: 50px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  gap: 5px;
+}
+.btn-pill.primary { background: var(--primary); color: white; box-shadow: 0 2px 4px rgba(37,99,235,0.3); }
+.btn-pill.primary:hover { background: var(--primary-dark); transform: translateY(-1px); }
+
+.btn-pill.dark { background: var(--dark); color: white; }
+.btn-pill.dark:hover { background: #334155; }
+
+/* Empty & Loading */
+.empty-row, .loading-state {
+  text-align: center;
+  padding: 40px;
+  color: var(--gray);
+  font-size: 0.95rem;
+}
+
+.login-req {
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 80vh;
-  background-color: var(--bg-color);
+  height: 100vh;
+  font-size: 1.1rem;
+}
+/* Thêm vào BookingManagement.css */
+
+.filter-group {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap; /* Xuống dòng nếu màn hình nhỏ */
 }
 
-.prompt-card {
-  background: white;
-  padding: 40px;
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  text-align: center;
-  max-width: 400px;
+.filter-select {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 14px;
+    outline: none;
+    cursor: pointer;
+    background-color: white;
 }
 
-.prompt-card h2 { margin-top: 0; color: var(--text-primary); }
-.prompt-link { color: var(--primary-color); text-decoration: none; font-weight: 600; }
-
-/* --- Responsive (Mobile & Desktop lớn) --- */
-
-/* Màn hình lớn (PC): Hiện chữ trong nút bấm cho rõ nghĩa */
-@media (min-width: 1200px) {
-  .btn-action {
-    padding: 6px 12px; /* Padding chữ nhật */
-  }
-  .btn-action span {
-    display: inline-block;
-    margin-left: 6px;
-    font-size: 0.85rem;
+.btn-clear {
+    background: #f1f5f9;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    color: #64748b;
     font-weight: 500;
-  }
 }
 
-/* Màn hình nhỏ (Mobile): Tinh chỉnh font size */
+.btn-clear:hover {
+    background: #e2e8f0;
+    color: #334155;
+}
+
+/* Responsive */
 @media (max-width: 768px) {
-  .booking-container { padding: 20px 10px; }
-  .booking-header h1 { font-size: 1.5rem; }
-  .booking-table th, .booking-table td { padding: 12px 8px; font-size: 0.85rem; }
+  .manage-page { padding: 20px 10px; }
+  .manage-header { flex-direction: column; align-items: flex-start; }
+  .filter-box { width: 100%; justify-content: space-between; }
+  .modern-table th, .modern-table td { padding: 12px; }
+  .btn-pill span { display: none; } /* Ẩn chữ trên mobile, chỉ hiện icon */
+  .btn-pill { padding: 8px; border-radius: 8px; } /* Biến nút pill thành nút vuông bo góc */
 }

@@ -2,9 +2,8 @@ import React, { useState } from 'react';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth } from './firebaseConfig';
 import { useNavigate } from 'react-router-dom';
-import './Auth.css'; // Tận dụng lại CSS của trang Login
+import './Auth.css';
 
-// Inline Icons (Dùng chung bộ icon với Login để nhất quán)
 const Icons = {
   Mail: () => <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>,
   Lock: () => <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>,
@@ -17,7 +16,7 @@ const Icons = {
 function SignUp() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState(''); // Thêm xác nhận mật khẩu
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -27,13 +26,10 @@ function SignUp() {
     e.preventDefault();
     setError('');
 
-    // Validate mật khẩu khớp nhau
     if (password !== confirmPassword) {
       setError('Mật khẩu xác nhận không khớp.');
       return;
     }
-
-    // Validate độ dài mật khẩu (Firebase yêu cầu tối thiểu 6)
     if (password.length < 6) {
       setError('Mật khẩu phải có ít nhất 6 ký tự.');
       return;
@@ -43,16 +39,14 @@ function SignUp() {
 
     try {
       await createUserWithEmailAndPassword(auth, email, password);
-      // Đăng ký thành công -> Chuyển về Dashboard hoặc Login
-      // Firebase tự động login sau khi đăng ký, nên chuyển về Dashboard (/) là hợp lý nhất
-      // Nhưng nếu bạn muốn user đăng nhập lại thì chuyển về /login
-      alert('Đăng ký tài khoản thành công!'); 
-      navigate('/login'); 
+      // Firebase tự động đăng nhập sau khi đăng ký thành công
+      alert('Đăng ký thành công! Đang chuyển hướng...');
+      navigate('/'); 
     } catch (error) {
       console.error('Lỗi đăng ký:', error.code);
       switch (error.code) {
         case 'auth/email-already-in-use':
-          setError('Email này đã được sử dụng bởi tài khoản khác.');
+          setError('Email này đã được sử dụng.');
           break;
         case 'auth/weak-password':
           setError('Mật khẩu quá yếu.');
@@ -73,23 +67,23 @@ function SignUp() {
       <div className="auth-card">
         <div className="auth-header">
           <h2>Tạo tài khoản mới</h2>
-          <p>Bắt đầu quản lý khách sạn chuyên nghiệp</p>
+          <p>Quản lý khách sạn chuyên nghiệp</p>
         </div>
 
         {error && (
           <div className="error-box">
-            <Icons.Alert /> {error}
+            <Icons.Alert /> <span>{error}</span>
           </div>
         )}
 
         <form onSubmit={handleSignUp} className="auth-form">
-          {/* Email */}
           <div className="input-group">
+            <label>Email</label>
             <div className="input-wrapper">
-              <span className="input-icon"><Icons.Mail /></span>
+              {/* <span className="input-icon"><Icons.Mail /></span> */}
               <input
                 type="email"
-                placeholder="Email"
+                placeholder="name@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -98,13 +92,13 @@ function SignUp() {
             </div>
           </div>
 
-          {/* Mật khẩu */}
           <div className="input-group">
+            <label>Mật khẩu</label>
             <div className="input-wrapper">
-              <span className="input-icon"><Icons.Lock /></span>
+              {/* <span className="input-icon"><Icons.Lock /></span> */}
               <input
                 type={showPassword ? "text" : "password"}
-                placeholder="Mật khẩu (tối thiểu 6 ký tự)"
+                placeholder="Tối thiểu 6 ký tự"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -121,10 +115,10 @@ function SignUp() {
             </div>
           </div>
 
-          {/* Xác nhận mật khẩu */}
           <div className="input-group">
+            <label>Xác nhận mật khẩu</label>
             <div className="input-wrapper">
-              <span className="input-icon"><Icons.Check /></span>
+              {/* <span className="input-icon"><Icons.Check /></span> */}
               <input
                 type={showPassword ? "text" : "password"}
                 placeholder="Nhập lại mật khẩu"
@@ -143,10 +137,7 @@ function SignUp() {
 
         <div className="auth-footer">
           <span>Đã có tài khoản? </span>
-          <button 
-            onClick={() => navigate('/login')} 
-            className="link-btn"
-          >
+          <button onClick={() => navigate('/login')} className="link-btn">
             Đăng nhập ngay
           </button>
         </div>
