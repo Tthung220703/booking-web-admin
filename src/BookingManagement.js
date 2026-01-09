@@ -22,10 +22,9 @@ const BookingManagement = () => {
 
     // --- STATE CHO BỘ LỌC ---
     const [filterDate, setFilterDate] = useState('');
-    const [filterStatus, setFilterStatus] = useState('all'); // 'all', 'Đang chờ duyệt', ...
-    const [filterHotel, setFilterHotel] = useState('all');   // 'all' hoặc hotelId
+    const [filterStatus, setFilterStatus] = useState('all'); 
+    const [filterHotel, setFilterHotel] = useState('all');   
 
-    // Kiểm tra đăng nhập
     useEffect(() => {
         const unsubscribe = auth.onAuthStateChanged((currentUser) => {
             setUser(currentUser);
@@ -34,7 +33,6 @@ const BookingManagement = () => {
         return () => unsubscribe();
     }, []);
 
-    // Lấy dữ liệu Realtime
     useEffect(() => {
         if (!user) return;
 
@@ -64,7 +62,6 @@ const BookingManagement = () => {
         return () => unsubscribe();
     }, [user]);
 
-    // Update Status
     const updateOrderStatus = async (orderId, newStatus) => {
         if(!window.confirm(`Bạn chắc chắn muốn chuyển trạng thái thành "${newStatus}"?`)) return;
 
@@ -101,7 +98,6 @@ const BookingManagement = () => {
         }
     };
 
-    // Check Out
     const handleCheckOut = async (orderId) => {
         if(!window.confirm('Xác nhận khách đã trả phòng? Kho phòng sẽ được cộng lại.')) return;
         try {
@@ -129,8 +125,19 @@ const BookingManagement = () => {
         }
     };
 
-    // In hóa đơn
+    // --- CẬP NHẬT HÓA ĐƠN ---
     const exportInvoice = (order) => {
+        // Xử lý text cho hóa đơn
+        let paymentText = "Chưa rõ";
+        if (order.paymentMethod === 'Tiền mặt (COD)') {
+            paymentText = "Tiền mặt (COD)";
+        } else if (order.paymentMethod === 'Online (Stripe)') {
+            // Trong hóa đơn in ra thì in full mã cũng được, hoặc in 5 số cuối tùy bạn
+            // Ở đây mình in 5 số cuối cho gọn giống yêu cầu
+            const transCode = order.transactionId ? order.transactionId.slice(-5).toUpperCase() : 'N/A';
+            paymentText = `Online (***${transCode})`;
+        }
+
         const content = `
         <html>
             <head>
@@ -158,6 +165,7 @@ const BookingManagement = () => {
                     <div class="info-grid">
                         <div><span class="label">Khách sạn</span><div class="val">${hotelNames[order.hotelId] || 'Hệ thống'}</div></div>
                         <div><span class="label">Khách hàng</span><div class="val">${order.userName}</div></div>
+                        <div><span class="label">Phương thức TT</span><div class="val">${paymentText}</div></div>
                         <div><span class="label">Số điện thoại</span><div class="val">${order.phoneNumber}</div></div>
                         <div><span class="label">Loại phòng</span><div class="val">${order.roomType} (x${order.roomCount})</div></div>
                         <div><span class="label">Check-in</span><div class="val">${new Date(order.checkInDate).toLocaleDateString('vi-VN')}</div></div>
@@ -177,9 +185,7 @@ const BookingManagement = () => {
         win.document.close();
     };
 
-    // --- LOGIC LỌC TỔNG HỢP (DATE + STATUS + HOTEL) ---
     const displayedOrders = orders.filter(o => {
-        // 1. Lọc theo Ngày (nếu có chọn)
         let matchDate = true;
         if (filterDate && o.checkInDate) {
             const orderDate = new Date(o.checkInDate);
@@ -190,17 +196,11 @@ const BookingManagement = () => {
                 orderDate.getFullYear() === searchDate.getFullYear()
             );
         }
-
-        // 2. Lọc theo Trạng thái
         const matchStatus = filterStatus === 'all' || o.status === filterStatus;
-
-        // 3. Lọc theo Khách sạn
         const matchHotel = filterHotel === 'all' || o.hotelId === filterHotel;
-
         return matchDate && matchStatus && matchHotel;
     });
 
-    // Reset bộ lọc
     const clearFilters = () => {
         setFilterDate('');
         setFilterStatus('all');
@@ -223,7 +223,6 @@ const BookingManagement = () => {
     return (
         <div className="manage-page">
             <div className="manage-container">
-                {/* --- HEADER & FILTERS --- */}
                 <div className="manage-header">
                     <div>
                         <h1>Quản lý Đặt phòng</h1>
@@ -231,7 +230,6 @@ const BookingManagement = () => {
                     </div>
                     
                     <div className="filter-group">
-                        {/* Lọc Khách Sạn */}
                         <select 
                             className="filter-select" 
                             value={filterHotel} 
@@ -243,7 +241,6 @@ const BookingManagement = () => {
                             ))}
                         </select>
 
-                        {/* Lọc Trạng Thái */}
                         <select 
                             className="filter-select"
                             value={filterStatus}
@@ -258,7 +255,6 @@ const BookingManagement = () => {
                             <option value="Người dùng không đến">Khách không đến</option>
                         </select>
 
-                        {/* Lọc Ngày */}
                         <input 
                             type="date" 
                             value={filterDate}
@@ -266,14 +262,12 @@ const BookingManagement = () => {
                             className="date-input"
                         />
                         
-                        {/* Nút Xóa Lọc */}
                         {(filterDate || filterStatus !== 'all' || filterHotel !== 'all') && (
                             <button className="btn-clear" onClick={clearFilters}>Xóa lọc</button>
                         )}
                     </div>
                 </div>
 
-                {/* --- TABLE CONTENT --- */}
                 <div className="table-wrapper table-responsive">
                     {loading ? (
                         <div className="loading-state">Đang tải dữ liệu...</div>
@@ -301,10 +295,41 @@ const BookingManagement = () => {
                                             <div className="text-sub">{order.phoneNumber}</div>
                                             <div className="text-hotel">{hotelNames[order.hotelId]}</div>
                                         </td>
+                                        
+                                        {/* --- CỘT CHI TIẾT PHÒNG (Đã sửa) --- */}
                                         <td>
                                             <div className="fw-500">{order.roomType}</div>
                                             <div className="text-sub">SL: {order.roomCount} phòng</div>
+                                            
+                                            {/* HIỂN THỊ PHƯƠNG THỨC THANH TOÁN */}
+                                            <div className="payment-info" style={{ marginTop: '6px', fontSize: '0.8rem' }}>
+                                                {order.paymentMethod === 'Tiền mặt (COD)' && (
+                                                    <span style={{ 
+                                                        color: '#16a34a', 
+                                                        fontWeight: '600', 
+                                                        background: '#dcfce7', 
+                                                        padding: '2px 6px', 
+                                                        borderRadius: '4px' 
+                                                    }}>
+                                                        Tiền mặt
+                                                    </span>
+                                                )}
+
+                                                {order.paymentMethod === 'Online (Stripe)' && (
+                                                    <span style={{ 
+                                                        color: '#2563eb', 
+                                                        fontWeight: '600', 
+                                                        background: '#dbeafe', 
+                                                        padding: '2px 6px', 
+                                                        borderRadius: '4px',
+                                                        display: 'inline-block'
+                                                    }}>
+                                                        Online: ...{order.transactionId ? order.transactionId.slice(-5) : '???'}
+                                                    </span>
+                                                )}
+                                            </div>
                                         </td>
+
                                         <td>
                                             <div className="date-tag in">{new Date(order.checkInDate).toLocaleDateString('vi-VN')}</div>
                                             <span className="arrow">→</span>
